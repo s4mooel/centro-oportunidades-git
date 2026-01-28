@@ -1,0 +1,80 @@
+<script>
+const loaderUp = document.getElementById('loader-up');
+    loaderUp.style.display = 'block';
+    google.script.run.withSuccessHandler(function(data){
+      const select = document.getElementById('oficinas');
+      data.shift();
+      for(let i = 0; i < data.length; i++){
+        const row = data[i];
+        const codOfi = row[0];
+        const nomOfi = row[1];
+
+        const opt = document.createElement('option');
+        opt.value = `${codOfi}  |  ${nomOfi}`;
+        select.append(opt);
+      }
+      loaderUp.style.display = 'none';
+    }).dataOficinas()
+  
+    const bloque2 = document.getElementById("bloque2");
+    const btnSubmit = document.getElementById("btnSubmit");
+
+    document.querySelectorAll("input").forEach(el => {
+      el.addEventListener("input", validarFormulario);
+    });
+
+      validarFormulario();
+
+    function validarFormulario() {
+      let valido = true;
+
+      if (!document.getElementById("idCliente").value) {
+        document.getElementById("errIdCliente").style.display = "block";
+        valido = false;
+      } else {
+        document.getElementById("errIdCliente").style.display = "none";
+      }
+
+      if (!document.getElementById("nombreCliente").value.trim()) {
+        document.getElementById("errNombreCliente").style.display = "block";
+        valido = false;
+      } else {
+        document.getElementById("errNombreCliente").style.display = "none";
+      }
+
+      if (!document.getElementById("oficina").value) {
+        document.getElementById("errSel3").style.display = "block";
+        valido = false;
+      } else {
+        document.getElementById("errSel3").style.display = "none";
+      }
+
+
+      btnSubmit.disabled = !valido;
+    }
+
+    const loaderDown = document.getElementById("loader-down");
+
+    btnSubmit.addEventListener("click", () => {
+      console.log("Entró al botón para enviar al backend");
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Registrando...";
+      loaderDown.style.display = "block";
+      const datos = {
+        idCliente: document.getElementById("idCliente").value,
+        nombreCliente: document.getElementById("nombreCliente").value,
+        cod_oficina: document.getElementById("oficina").value.split("|")[0].trim(),
+        oficina: document.getElementById("oficina").value.split("|")[1].trim()
+      };
+
+      google.script.run.withSuccessHandler(function(res){
+          document.getElementById("idCliente").value = '';
+          document.getElementById("nombreCliente").value = '';
+          document.getElementById("oficina").value = '';
+          btnSubmit.textContent = "Registrar";
+          loaderDown.style.display = "none";
+          btnSubmit.disabled = false;
+        })
+        .guardarDatos(datos);
+    });
+</script>

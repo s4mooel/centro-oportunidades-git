@@ -1,0 +1,432 @@
+<!-- Index -->
+<style>
+  //-------------------------------------------------------------------------------------------------------------------------------------------
+  //                                             Report
+  //-------------------------------------------------------------------------------------------------------------------------------------------
+  :root {
+  --report-back: #fff;
+  --table-color: #7d8c79;
+  --header-color: #56615d;
+  --filtros: #bebcb7;
+  }
+
+  .row-normal {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: center;
+    padding: 3px;
+  }
+  .col-normal {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+    border-radius: 5px;
+  }
+  .title-report {
+    font-size: 20px;
+    color:  #fff;
+    background-color: var(--table-color);
+    justify-content: center;
+    border-radius: 5px 5px 0 0;
+    padding: 5px;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+  }
+  .col-report {
+    background-color: var(--report-back);
+    border-radius: 5px;
+    font-family: inherit;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px; 
+    display: flex;
+    flex-direction: column;
+    margin: 3px;
+    flex-grow: 1;
+  }
+  .row-report {
+    background-color: var(--report-back);
+    color: #000;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 15px;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    gap: 20px;
+    justify-content: space-evenly;
+    flex-grow: 1;
+    padding: 3px;
+  }
+  //----------------------------------------------------------------------------------------
+  //-------------                   Summary table                   ------------------------
+  .rowSummBody td {
+    text-align: center;
+    border: 1px solid #000;
+    padding: 5px;
+  }
+  .rowSummBody:hover td{
+    background-color: #DAD9D5;
+  }
+  //-------------------------------------------------------------------------------------------------------------------------------------------
+  body,html { 
+    font-family: 'Encode Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-stretch: 100%;
+    background: #f7f7f7;
+    margin: 0;
+    padding: 0;
+  }
+  #menu {
+    background: var(--header-color);
+    color: #fff;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .menu-button {
+    margin: 5px;
+    color: #fff;
+    text-decoration: none;
+  }
+  .menu-button:hover {
+    color: #cad5ed;
+  }
+  #content {
+    background: #fff ;
+    color: #000;
+    box-sizing: border-box;
+    border-radius:  0 0 20px 20px;
+    padding: 0 32px 0 32px;
+  }
+  #title-content {
+    font-size: 40px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .reporteGestion {
+    background: #cad5ed ;
+    color: #000;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #filtroS {
+    background: var(--header-color) ;
+    color: #fff;
+    padding: 10px;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    box-sizing: border-box;
+    border-radius: 20px 20px 0 0;
+    //border: solid #000 1px;
+    padding: 10px 32px 10px 32px;
+  }
+  #filtroANDcontent {
+    padding: 50px;
+    marging: 50px;
+  }
+  #btnLideres {
+    font-size: 50px;
+    display: flex;
+    box-sizing: border-box;
+    background-color: #2832c4;
+    border-radius: 10px;
+    padding: 20px;
+  }
+  #containerBtnLideres {
+    padding: 0 1130px 0 20px;
+    //margin: 20px 0 400px 0;
+  }
+  #fecha {
+    display: flex;
+    flex-direction: row;
+  }
+  .dateRange {
+    max-width: 100px;
+  }
+  .rowGestion {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+  }
+  .card {
+    background-color: #cb1111;
+    color: #fff;
+    box-sizing: border-box;
+    border-radius: 5px;
+    font-size: 40px;
+    //padding: 0 32px 0 32px;
+  }
+  .middle2 {
+    font-size: 15px;
+  }
+  #cliente-visitas {
+    padding: 20px 0 20px 0;
+  }
+  #bolsas-bancarios {
+    padding: 0 0 20px 0;
+  }
+  #colocacion-report {
+    padding: 0 0 20px 0;
+  }
+  .rowState {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background-color: #3b75e9;
+    box-sizing: border-box;
+    border-radius: 5px;
+    padding: 20px;
+    gap: 12px;
+    align-content: center;
+  }
+  .columnState {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background-color: #3b75e9;
+    box-sizing: border-box;
+    border-radius: 5px;
+    padding: 20px;
+    justify-content: center;
+  }
+  .numberResult {
+    /* background-color: #fff;
+    color: #000;
+    padding: 5px;
+    box-sizing: border-box;
+    border-radius: 5px */;
+    display: flex;
+    justify-content: center;
+  }
+</style>
+<!-- Gestión -->
+<style>
+  //----------------------------- Actions on table -----------------------------------
+  .row-updating {
+    background-color: #ffe0e0;
+    opacity: 0.3;
+  }
+  //--------------------------------------- Dropdown for tables and forms --------------------------------
+  .dropdown {
+    background-color: #811112;
+    color: #ffff;
+    font-family: inherit;
+    border-radius: 5px;
+    user-select: none;
+    cursor: pointer;
+    //margin-bottom: 10px;
+    margin-bottom: 10px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .dropdown-arrow {
+    font-size: 30px;
+  }
+  .hidden {
+    display: none;
+  }
+  //-------------------------- menu ---------------------------------------------------
+  #menu-form {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0 30px 0 30px;
+  }
+  .checkbox-select {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    top: 20%;
+    left: 30%;
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    min-width: 300px;
+    max-width: 100%;
+  }
+  .paraGestionar{ // Organiza los menu en forma de columna
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  #loader-down, #loader-up { // Se agrega loader para control de usuarios
+    margin-top: 10px;
+    text-align: center;
+    display: none;
+  }
+  .ording-menu {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 15px 0 0 15px;
+  }
+  .btn {
+    padding: 10px 15px; 
+    margin-top: 15px; 
+    border: none; 
+    border-radius: 5px; 
+    cursor: pointer;
+    max-width: 200px;
+    font-size: 30px;
+    font-family: inherit;
+  }
+  .btn:hover {
+    color: #cad5ed;
+  }
+  .btn-submit { 
+    background: #4caf50; 
+    color: white; 
+  }
+  .btn-submit:disabled { 
+    background: #aaa; 
+    cursor: not-allowed; 
+  }
+  #content_active {
+    padding: 30px;
+    //margin: 30px;
+    //overflow: hidden;
+  }
+  .tabulator-cell {
+    white-space: normal !important;
+    word-break: break-word;
+  }
+
+  .announcement {
+    background-color: #ff0000;
+    color: #fff; 
+    max-height: 200px;
+    max-width: 700px;
+    font-weight: 800;
+    font-family: monospace;
+    font-size: 20px;
+    padding: 7px;
+    text-align: center;
+  }
+</style>
+<!-- Acumulado -->
+<style>
+  #base-comercial {
+    margin: 20px;
+  }
+  .updates {
+    background-color: #fff;
+    color: #000;
+    border: solid #ffffff 10px;
+    border-radius: 5px;
+    padding: 15px;
+    font-weight: 400;
+    font-family: monospace;
+    font-size: 15px;
+    margin: 0 120px 0 120px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+  }
+  
+</style>
+<!-- Registrar cliente -->
+<style> 
+  .container { 
+    max-width: 330px; 
+    margin: 20px auto;
+    padding: 30px; 
+    background: white; 
+    border-radius: 10px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  h2 { 
+    margin-bottom: 15px; 
+    box-sizing: border-box;
+    border-bottom: solid #9e0909 1px;
+    padding-bottom: 5px;
+    width: 310px;
+  }
+  .required::after { content: " *"; color: red; }
+  select, input[type="text"], input[type="number"], input[type="date"], textarea {
+    box-sizing: border-box;
+    font-family: inherit; 
+    width: 300px; 
+    padding: 8px; 
+    margin-top: 5px; 
+  }
+  input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+  .error { color: red; font-size: 0.9em; display: none; }
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    color: white;
+    box-shadow: inset 5em 5em #000;
+    border-radius: 50%;
+    padding: 1px;
+    font-size: 15px;
+  }
+
+  .tooltip .tooltip-text {
+    visibility: hidden;
+    width: 420px;
+    background-color: #333;
+    color: #fff;
+    text-align: justify;
+    padding: 6px 8px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 0.7;
+  }
+  //------------------------------------------------------------------------------------------------------------
+  #summary-boss{
+    width: 100%;
+    padding-top: 20px;
+  }
+  #div-header-table {
+    overflow: hidden;
+  }
+  #div-body-table {
+    overflow-y: auto;
+    max-height: 400px;
+  }
+  /* #header-summary-boss, #body-summary-boss{
+    //border-radius: 10px 0 10px 0;
+    //width: 100%;
+    table-layout: fixed;
+  } */
+  /* #header-summary-boss th, #body-summary-boss td {
+    box-sizing: border-box;
+  } */
+  #wrapper-table{
+    max-height: 400px;
+    overflow-y: auto;
+    display: block;
+  }
+
+  .cellHead-sumBoss{
+    color: #fff;
+    background: var(--header-color);
+    min-width: 120px;
+    max-width: 150px;
+    padding: 5px;
+  }
+</style>

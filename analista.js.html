@@ -1,0 +1,356 @@
+<script>
+//--------------------------------------------------------------------------------------------------------------------
+//                                                        Analista
+//--------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------- Open and close for forms ----------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
+      function toggleDisplay(trigger, targetId) {
+        const target = document.getElementById(targetId);
+        if(!target) return;
+
+        const isHidden = target.classList.toggle("hidden");
+        trigger.setAttribute("aria-expanded", String(!isHidden));
+      }
+
+      document.querySelectorAll('.dropdown').forEach(cuadro => {
+        const targetId = cuadro.dataset.target;
+        cuadro.addEventListener("click", () => toggleDisplay(cuadro, targetId));
+      })
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla desembolsos            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos
+        let columnsDesem = tableForLideres("desembolso_id");
+        columnsDesem.splice(6,0,
+          {
+            title:"Valor desembolsado",
+            field:"valor_desembolso",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title: "Línea de trabajo",
+            field: "linea",
+            headerFilter: "list",
+            headerFilterPlaceholder: "Seleccione...",
+            headerFilterParams: {valuesLookup: true, clearable: true}
+          },
+          {
+            title:"Desistencia",
+            field:"noGestionable",
+            headerFilter: "list",
+            headerFilterPlaceholder: "Seleccione...",
+            headerFilterParams: {valuesLookup: true, clearable: true}
+          },
+          {title:"Observaciones", field:"observaciones"}
+        );
+        let tableDesembolsos = new Tabulator("#tabla-desembolsos", {
+          
+          height:"400px",
+          index: "desembolso_id",
+          layout: "fitColumns",
+          columns: columnsDesem
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        tableDesembolsos.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataAnalytic("dataDesembolsos");; // aquí se llama la función de GAS
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla visitas            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos
+      let columnsVisit = tableForLideres("visita_id");
+      columnsVisit.splice(6,0,
+        {title:"Compromiso", field:"compromiso", hozAlign:"left"},
+        {
+          title:"Acompañamiento",
+          field:"acompaniamiento",
+          headerFilter: "list",
+          headerFilterPlaceholder:"Seleccione un estado...",
+          headerFilterParams:{valuesLookup:true, clearable:true}
+        }
+      );
+        let tableVisitas = new Tabulator("#tabla-visitas", {
+          
+          height:"400px",
+          index: "visita_id",
+          layout: "fitColumns",
+          columns: columnsVisit
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        tableVisitas.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataAnalytic("dataVisitas"); // aquí se llama la función de GAS
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla seguros            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos
+        let columnsSeguros = tableForLideres("seguro_id");
+        columnsSeguros.splice(6,0,
+          {title:"Producto", field:"seguro", hozAlign:"right"},
+          {
+            title:"Valor Negociado",
+            field:"valor_negociado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title:"Valor Efectivo",
+            field:"valor_aceptado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {title:"Observaciones", field:"observaciones"}
+        );
+        let tableSeguros = new Tabulator("#tabla-seguros", {
+          
+          height:"400px",
+          index: "seguro_id",
+          layout: "fitColumns",
+          columns: columnsSeguros
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        tableSeguros.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataAnalytic("dataSeguros"); // aquí se llama la función de GAS
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla Colocación            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+        let columnsColocacion = tableForLideres("colocacion_id");
+        columnsColocacion.splice(6,0,
+          {
+            title: "Motivo no gestionable",
+            field: "noGestionable",
+            headerFilter: "list",
+            headerFilterParams: {valuesLookup: true, clearable: true}
+          },
+          {
+            title:"¿Requiere estructurador?",
+            field:"estructurador",
+            headerFilter:"list",
+            headerFilterPlaceholder:"Seleccione un estado...",
+            headerFilterParams:{valuesLookup:true, clearable: true}
+          },
+          {title: "Observaciones", field:"observaciones"}
+        );
+        let colocacionTable = new Tabulator("#colocacion", {
+          //data: data,
+          height:"400px",
+          layout: "fitColumns",
+          index: "colocacion_id",
+          columns: columnsColocacion
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        colocacionTable.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataAnalytic("dataColocacion");
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla Captación           -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+        let columnsCaptacion = tableForLideres("captacion_id");
+        columnsCaptacion.splice(6,0,
+          {
+            title:"Producto", 
+            field:"producto",
+            headerFilter:"list",
+            headerFilterPlaceholder:"Seleccione...",
+            headerFilterParams:{valuesLookup:true, clearable: true}
+          },
+          {
+            title:"Valor Negociado",
+            field:"valor_negociado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title:"Valor Efectivo",
+            field:"valor_aceptado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {title:"Razon desiste", field:"desiste"},
+          {title:"Observaciones", field:"observaciones"}  
+        );
+        let captacionTable = new Tabulator("#captacion", {
+          height:"400px",
+          index: "captacion_id",
+          layout: "fitColumns",
+          columns : columnsCaptacion
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        captacionTable.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataAnalytic("dataCaptacion");
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla Transaccional           -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+        let columnsTransaccional = tableForLideres("transaccional_id");
+        columnsTransaccional.splice(6,0,
+          {
+            title:"Producto", 
+            field:"producto",
+            headerFilter:"list",
+            headerFilterPlaceholder:"Seleccione...",
+            headerFilterParams:{valuesLookup:true, clearable: true}
+          },
+          {
+            title:"Valor Negociado",
+            field:"valor_negociado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title:"Valor Efectivo",
+            field:"valor_aceptado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {title:"Razon desiste", field:"desiste"},
+          {title:"Observaciones", field:"observaciones"}
+        );
+        let transaccionalTable = new Tabulator("#transaccional", {
+          //data: data,
+          height:"400px",
+          index: "transaccional_id",
+          layout: "fitColumns",
+          columns: columnsTransaccional
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        transaccionalTable.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataAnalytic("dataTransaccional");
+
+      let dummyTable = new Tabulator("#dummy-table",{});
+    let forExcel = {
+      "Visitas" : tableVisitas,
+      "Cupos de crédito" : colocacionTable,
+      "Desembolsos" : tableDesembolsos,
+      "Captacion" : captacionTable,
+      "Transaccional" : transaccionalTable,
+      "Sinergía" : tableSeguros
+    }
+
+    const btnDownload = document.getElementById("btnSubmit");
+    btnDownload.addEventListener("click", () => {
+      google.script.run.withSuccessHandler(resp => {
+        dummyTable.download("xlsx","CdO" + resp[0].split('@')[0] + ".xlsx" , {sheets : forExcel})
+      }).getEmail()
+    })
+</script>

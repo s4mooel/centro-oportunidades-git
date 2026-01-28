@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Encode+Sans&amp;display=swap" rel="stylesheet">
+  <?!= include('allStyles'); ?>
+</head>
+<body>
+  <nav id="menu">
+      <?let url = getScriptUrl();?>
+      <a class="menu-button" href="<?=url?>?page=index">Informe Gerencial</a>
+      <a class="menu-button" href="<?=url?>?page=gestion">Gestión</a>
+      <a class="menu-button" href="<?=url?>?page=acumulado">Base comercial</a>
+      <a class="menu-button" href="<?=url?>?page=registrar-cliente">Cliente nuevo</a>
+    </nav>
+  <div id="title-content">Registrar cliente nuevo</div>
+  <div id="content"></div>
+
+  <div class="container">
+    <h2 id="title">Registrar cliente</h2>
+
+    <!-- Segundo bloque condicional -->
+    <div id="bloque2">
+      <label class="required">ID de cliente
+        <p class="tooltip">?
+        <span class="tooltip-text">Ingrese el Id del cliente sin puntos, comas, ni ningun carater. (NIT con DV)</span>
+        </p>
+      </label><br>
+      <input type="number" id="idCliente" required>
+      <span class="error" id="errIdCliente">Este campo es obligatorio</span>
+
+      <label class="required">Nombre del cliente</label><br>
+      <input type="text" id="nombreCliente" required>
+      <span class="error" id="errNombreCliente">Este campo es obligatorio</span>
+
+      <label class="required">Oficina</label><br>
+      <input type="text" id="oficina" list="oficinas" placeholder="Escribe código o nombre de la oficina..." required>
+      <datalist id="oficinas" required>
+        <option value="">-- Selecciona --</option>
+        <!-- Aquí van muchas options -->
+      </datalist>
+      <div id="loader-up">
+        <img src="https://i.gifer.com/ZZ5H.gif" width="40" alt="Cargando...">
+      </div>
+      <span class="error" id="errSel3">Este campo es obligatorio</span>
+      <button type="button" onclick="limpiarSelect('oficina')">Limpiar</button>
+    </div>
+    <button class="btn btn-submit" id="btnSubmit" disabled>Registrar</button>
+    <div id="loader-down">
+          <img src="https://i.gifer.com/ZZ5H.gif" width="40" alt="Cargando...">
+    </div>
+  
+  </div>
+  <?!= include('registrar-cliente.js') ?>
+</body>
+</html>

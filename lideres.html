@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans&amp;display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+    <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.7.2/build/global/luxon.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <?!= include('functions'); ?> <!-- Upload global functions from the script -->
+    <?!= include('allStyles'); ?>
+    <?!= include('tables'); ?>
+  </head>
+  <body>
+    <nav id="menu">
+      <?let url = getScriptUrl();?>
+      <a class="menu-button" href="<?=url?>?page=index">Informe Gerencial</a>
+    </nav>
+    <div id="title-content">
+      <label> Consulta Líderes </label>
+      <!-- <div class="announcement">En el momento el archivo de descarga no lo lee excel, pero si sube a Google Drive se puede visualizar la información descargada en Google Sheets. Estamos trabajando en arreglarlo, disculpe las molestias.</div> -->
+    </div>
+    <div id="content">
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--  _________________________________________ Resumen _____________________________________________ -->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="summary-boss" role="button" tabindex="0" aria-expanded="false">
+      <label>Tablero Resumen</label> 
+      <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div id="summary-boss" class="hidden">
+        <div id="periodo">
+          <label>Periodo</label><br>
+          <input id="dateInit" type="date"> - <input id="dateEnd" type="date"> <button id="erase">Limpiar</button>
+          <div id="loader-up">
+            <img src="https://i.gifer.com/ZZ5H.gif" width="40" alt="Cargando...">
+          </div>
+        </div>
+        <div id="table-summary"></div>
+      </div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--  _________________________________________ Visitas _____________________________________________ -->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="tabla-visitas" role="button" tabindex="0" aria-expanded="false">
+      <label>Visitas</label> 
+      <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div id="tabla-visitas" class="hidden"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Colocación ------------------------------------------------>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="colocacion" role="button" tabindex="0" aria-expanded="false">
+        <div>Cupos de crédito</div> 
+        <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div class="hidden" id="colocacion"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--  _________________________________________ Desembolsos _____________________________________________ -->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="tabla-desembolsos" role="button" tabindex="0" aria-expanded="false">
+      <label>Desembolsos</label> 
+      <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div id="tabla-desembolsos" class="hidden"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Captación ------------------------------------------------->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="captacion" role="button" tabindex="0" aria-expanded="false">
+        <div>Captación</div> 
+        <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div class="hidden" id="captacion"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!------------------------------------------------------- Transaccional ------------------------------------------------>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="transaccional" role="button" tabindex="0" aria-expanded="false">
+        <div>Transaccional</div> 
+        <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div class="hidden" id="transaccional"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--  _________________________________________ Seguros _____________________________________________ -->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="tabla-seguros" role="button" tabindex="0" aria-expanded="false">
+      <label>Sinergía</label> 
+      <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div id="tabla-seguros" class="hidden"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--  _________________________________________ Reemplazo _____________________________________________ -->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="tabla-reemplazo" role="button" tabindex="0" aria-expanded="false">
+      <label>Asignación temporal de comercial</label> 
+      <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div id="tabla-reemplazo" class="hidden"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--  _________________________________________   Botón de descarga       _____________________________________________ -->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div id="btnDownload">
+        <button class="btn btn-submit" id="btnSubmit">Descargar</button>
+      </div>
+      <div id="dummy-table" class="hidden"></div>
+    </div>
+    <?!= include('lideres.js') ?>
+  </body>
+</html>

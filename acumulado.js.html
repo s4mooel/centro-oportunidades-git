@@ -1,0 +1,173 @@
+<script>
+      //---------------------------------------------------------------------------------------------------------------------
+      //                                        Tabla de la base comercial
+      //---------------------------------------------------------------------------------------------------------------------
+      let baseComercial = new Tabulator("#base-comercial", {
+        height:"1000px",
+        renderHorizontal: "virtual",
+        resizable: true,
+        columnDefaults:{
+          maxWidth: 180,
+          minWidth: 140,
+        },
+        index: "cliente_id",
+
+        columns: [
+          {title:"cliente_id", field: "cliente_id", visible: false},
+          {
+            title:"Nit o Id cliente",
+            field: "nit_cliente",
+            headerFilter:"input",
+            headerFilterPlaceholder:"Escriba el ID o Nit..."
+          },
+          {
+            title:"Nombre del cliente",
+            field: "nombre_cliente",
+            headerFilter:"input",
+            headerFilterPlaceholder:"Escriba el nombre..."
+          },
+          {
+            title:"No. Acta",
+            field: "acta",
+            headerFilter:"input",
+            headerFilterPlaceholder:"Escriba número acta..."
+          },
+          {title:"Fecha vigencia", field: "fecha_vigencia"},
+          {
+            title:"Estado Acta",
+            field: "estado_acta",
+            headerFilter:"list",
+            headerFilterParams: {valuesLookup: true, clearable: true},
+            headerFilterPlaceholder:"Seleccione un estado...",
+            topCalc: "count"
+          },
+          {
+            title:"VMA Aprobado",
+            field: "vma_total",
+            hozAlign: "right",
+            formatter: "money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title:"VMA Solicitado",
+            field: "vma_solicitado",
+            hozAlign: "right",
+            formatter: "money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {title:"Nómina", field: "nomina"},
+          {title:"Recaudo", field: "recaudo"},
+          {title:"Plan 20", field: "plan_20"},
+          {
+            title:"Gestion Plan 20",
+            field: "gestion_20",
+            headerFilter:"list",
+            headerFilterParams: {valuesLookup: true, clearable: true},
+            headerFilterPlaceholder: "Seleccione un estado..."
+          }
+        ]
+      });
+
+      google.script.run.withSuccessHandler(function(data){
+        console.log(JSON.parse(data.data));
+        if(data.level){
+          baseComercial.addColumn({
+            title: "Id Comercial",
+            field: "id_legal_comercial",
+            headerFilter: "input",
+            headerFilterPlaceholder: "Escriba el ID..."
+          },true);
+          baseComercial.addColumn({
+            title: "Nombre Comercial",
+            field: "nombre_comercial",
+            headerFilter: "input",
+            headerFilterPlaceholder: "Escriba el nombre..."
+          }, false,"id_legal_comercial")
+          baseComercial.addColumn({
+            title: "Cargo Comercial",
+            field: "cargo_comercial",
+            headerFilter: "list",
+            headerFilterParams: {valuesLookup: true, clearable: true},
+            headerFilterPlaceholder: "Seleccione el cargo..."
+          }, false, "nombre_comercial");
+        }
+        const today = new Date();
+        const month = today.getMonth();
+        for(let i = 0; i < month+1; i++){
+          let dummyDate = new Date()
+          let i0 = i-1;
+          dummyDate.setMonth(i);
+          if(i == 0){
+            baseComercial.addColumn({
+              title: dummyDate.toLocaleString("es-ES", {month: "long"}).toUpperCase() + " Amortizado",
+              field: i + "amortizado",
+              hozAlign: "right",
+              formatter: "money",
+              formatterParams: {
+                decimal:",",
+                thousand:".",
+                symbol: "$",
+                symbolAfter: false,
+              },
+              topCalc:"sum",
+              topCalcFormatter: "money",
+              topCalcFormatterParams: {
+                decimal:",",
+                thousand:".",
+                symbol: "$",
+                symbolAfter: false
+              },
+            }, false, "gestion_20")
+          } else {
+            baseComercial.addColumn({
+              title: dummyDate.toLocaleString("es-ES", {month: "long"}).toUpperCase() + " Amortizado",
+              field: i + "amortizado",
+              hozAlign: "right",
+              formatter: "money",
+              formatterParams: {
+                decimal:",",
+                thousand:".",
+                symbol: "$",
+                symbolAfter: false,
+              },
+              topCalc:"sum",
+              topCalcFormatter: "money",
+              topCalcFormatterParams: {
+                decimal:",",
+                thousand:".",
+                symbol: "$",
+                symbolAfter: false
+              },
+            }, false, i0 + "amortizado")
+          }
+          
+        }
+        baseComercial.setData(data.data);
+      }).getBaseComercial();
+</script>

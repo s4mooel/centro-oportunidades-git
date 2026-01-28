@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans&amp;display=swap" rel="stylesheet">
+    <?!= include('allStyles'); ?>
+    <style>
+      body {
+        font-family: 'Encode Sans';
+        font-style: normal;
+        font-weight: 400;
+        font-stretch: 100%; 
+      }
+      #admin-content {
+        background: #fff;
+        padding: 25px;
+        border-radius: 0 0 12px 12px;
+        width: 420px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        align-items: center;
+        justify-content: center;
+        /* position: absolute;
+        top: 0; */
+      }
+      .formSelect {
+        min-width: 250px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav id="menu">
+      <?let url = getScriptUrl();?>
+      <a class="menu-button" href="<?=url?>?page=index">Informe Gerencial</a>
+      <a class="menu-button" href="<?=url?>?page=gestion">Gestión</a>
+      <a class="menu-button" href="<?=url?>?page=acumulado">Base comercial</a>
+      <a class="menu-button" href="<?=url?>?page=registrar-cliente">Cliente nuevo</a>
+      <!-- <a class="menu-button" href="<?=url?>?page=colocacionReport">Temp</a> -->
+    </nav>
+    <div id="admin-content">
+      <h2>Bienvenido, elija la sesión del usuario que quiere consultar</h2>
+      <label>Líder</label><br>
+      <select id="lideres" class="formSelect">
+      </select><br>
+      <label>Comercial</label><br>
+      <select id="comerciales" class="formSelect">
+      </select>
+    </div>
+    <script>
+      $(document).ready(function (){
+        $('#lideres').select2({
+          allowClear: true
+        });
+        $('#comerciales').select2({
+          allowClear: true
+        });
+      })
+      const lideresSelect = document.getElementById('lideres');
+      const comercialesSelect = document.getElementById('comerciales');
+      google.script.run.withSuccessHandler(function(data){
+        JSON.parse(data[0]).forEach(row => {
+          const comercial = document.createElement('option');
+          comercial.value = row[1];
+          comercial.textContent = row[0];
+          comercialesSelect.append(comercial);
+        })
+        JSON.parse(data[1]).forEach(row => {
+          const lider = document.createElement('option');
+          lider.value = row[1];
+          lider.textContent = row[0];
+          lideresSelect.append(lider);
+        })
+      }).allUsers()
+    </script>
+  </body>
+</html>

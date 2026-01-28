@@ -1,0 +1,207 @@
+<style>
+  .panel {
+    position: fixed;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 5px;
+    display: none;
+    z-index: 9999;
+  }
+  #dateRange {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #rangeDiv {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .dateInterval {
+    max-width: 50px;
+  }
+</style>
+<script>
+
+function dateForTable(formattingDate) {
+    const year = formattingDate.getFullYear();
+    const month = formattingDate.getMonth()+1;
+    const numberDay = formattingDate.getDate();
+
+    return `${year}-${month < 10 ? 0 : ''}${month}-${numberDay < 10 ? 0 : ''}${numberDay}`
+}
+
+function formatterNumber(input){
+  input.addEventListener("input", (valor) =>{
+    let valorInput = valor.target.value.replace(/\./g,"");
+    valorInput = valorInput.replace(/\D/g,"");
+    valorInput = valorInput.replace(/\B(?=(\d{3})+(?!\d))/g,".");
+    valor.target.value = valorInput;
+  });
+}
+
+
+const GlobalFilters = {
+  dateRangeHeaderFilter(cell, onRendered, success, cancel, editorParams){
+    const container = document.createElement("span");
+    container.id = "dateRange";
+
+    const containerRange = document.createElement('div');
+    containerRange.id = "rangeDiv";
+
+    const startInput = document.createElement('input');
+    startInput.type = "date";
+    startInput.placeholder = "Desde...";
+    startInput.classList.add("dateInterval");
+
+    const endInput = document.createElement('input');
+    endInput.type = "date";
+    endInput.placeholder = "Hasta...";
+    endInput.classList.add("dateInterval");
+
+    const clearBtn = document.createElement("button");
+    clearBtn.textContent = "Limpiar";
+
+    const updateFilter = () => {
+      success({
+        start: startInput.value || null,
+        end: endInput.value || null
+      });
+    };
+
+    startInput.addEventListener("change", updateFilter);
+    endInput.addEventListener("change", updateFilter);
+    clearBtn.addEventListener("click", () => {
+      startInput.value = endInput.value = "";
+      success({
+        start: "",
+        end: ""
+      });
+    })
+    containerRange.append(startInput, endInput);
+    container.append(containerRange, clearBtn);
+
+    return container;
+  },
+  dateRangeFilterFunc(headerValue, rowValue, rowData, filterParams){
+    if(!rowValue) return false;
+    if(!headerValue || (!headerValue.start && !headerValue.end)) return true;
+
+    const {DateTime} = luxon;
+
+
+    //const format = "yyyy-MM-dd";
+
+    const cellDate = DateTime.fromISO(rowValue);
+
+    const startDate = headerValue.start ? DateTime.fromISO(headerValue.start) : null;
+    const endDate = headerValue.end ? DateTime.fromISO(headerValue.end) : null;
+
+    if((startDate && cellDate < startDate) || (endDate && cellDate > endDate.endOf("day"))){
+      return false;
+    } else {
+      return true;
+    }
+
+  }
+}
+
+const forEditCell = {
+  cellEdited: function(cell, spreadsheet, sheet, field, typeId){
+    const row = cell.getRow();
+    const value = cell.getValue()
+    const data = row.getData();
+    const table = row.getTable();
+    let newValue = cell.getValue();
+    if(typeId === "comercial_id" && field === "id_reemplazo"){
+      const column1 = table.getColumn("comercial_id").getCells().map(cell => cell.getValue());
+      const column2 = table.getColumn("nombre_comercial").getCells().map(cell => cell.getValue());
+      const idxComercialId = column2.indexOf(value);
+      const comReplacing = idxComercialId === -1 ? "" : column1[idxComercialId];
+      console.log("Consultant name: " + value + ", id: " + comReplacing);
+      //console.log(column1, column2)
+      newValue = comReplacing;
+    }
+    //console.log(data[typeId]);
+    
+    //const currRightNow = new Date();
+    //const rightNow = dateForTable(currRightNow);
+
+    row.getElement().classList.add("row-updating");
+
+    google.script.run.withSuccessHandler(resp => {
+      if(resp.valNegociado){
+        row.update({valor_negociado : data.valor_aceptado});
+        row.update({valor_aceptado : 0})
+      } else if(resp.valAceptado){
+        row.update({valor_aceptado: data.valor_negociado});
+        row.update({valor_negociado: 0});
+      } else if(resp.goodState){
+          row.update({desistencia: ''})
+          row.update({noGestionable: ''})
+      }
+      row.getElement().classList.remove("row-updating");
+    }).editSheet(data[typeId], spreadsheet, sheet, field, newValue);
+  },
+  cellClick: function(e, cell, spreadsheet, sheet, field, typeId){
+    let row = cell.getRow();
+    let data = row.getData();
+    if(data.__deleting) return;
+
+    row.update({__deleting: true});
+    row.getElement().classList.add("row-updating");
+    
+    google.script.run.withSuccessHandler(function(res){
+      if(res && res.success){
+        row.delete();
+        row.update({__deleting: false});
+      } else {
+        alert('Ocurrió un error desconocido');
+      }
+    }).editSheet(data[typeId], spreadsheet, sheet, field);
+  },
+  editNum: function(cell, onRendered, success, cancel){
+    const editor = document.createElement('input');
+
+    editor.type = "text";
+    editor.value = cell.getValue() || "";
+
+    editor.style.width = "100%";
+    editor.style.boxSizing = "border-box";
+
+    formatterNumber(editor);
+
+    editor.addEventListener("blur", () => success(parseInt(editor.value.replace(/\./g, "").trim(),10)));
+    editor.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") success(parseInt(editor.value.replace(/\./g, "").trim(),10))
+      else if(e.key === "Escape") cancel();
+    });
+    return editor;
+  },
+  editReplacement: function(cell, onRendered, success, cancel){
+    const editor = document.createElement('select');
+    editor.id = "comercialTemp";
+    $(document).ready(function(){
+      $('#comercialTemp').select2({
+        allowClear: true
+      });
+    })
+    editor.style.width = "100%";
+    editor.style.boxSizing = "border-box";
+
+    editor.value = cell.getValue() || "";
+
+    editor.addEventListener("blur", () => cancel());
+    editor.addEventListener("keydown", (e) => {if(e.key === "Escape") cancel()});
+    editor.addEventListener("click", (e) => {if(e.currentTarget.value === "") success(editor.value)});
+
+    return editor;
+
+  }
+}
+
+const calcRows = document.querySelectorAll('.tabulator-calcs');
+calcRows.forEach(row => row.classList.add('calcRow'));
+
+</script>
+

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans&amp;display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+    <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
+    <?!= include('allStyles'); ?>
+  </head>
+  <body>
+    <nav id="menu">
+      <?let url = getScriptUrl();?>
+      <a class="menu-button" href="<?=url?>?page=index">Informe Gerencial</a>
+      <a class="menu-button" href="<?=url?>?page=gestion">Gestión</a>
+      <a class="menu-button" href="<?=url?>?page=acumulado">Base comercial</a>
+      <a class="menu-button" href="<?=url?>?page=registrar-cliente">Cliente nuevo</a>
+    </nav>
+    <div id="title-content">Recopilación de la información entregada por crédito, estrategias y campañas</div>
+    <div class="updates">
+      Actualización<br>
+      <ul>
+        <li>VMA Aprobado, actas y fechas de vigencia: <strong>Diciembre 11</strong></li>
+        <li>VMA Solicitado: <strong>Diciembre 18</strong></li>
+        <li>Nómina y Recaudo: <strong>Octubre 1</strong></li>
+      </ul>
+    </div>
+    <div id="base-comercial"></div>
+    <?!= include('acumulado.js')?>
+  </body>
+</html>

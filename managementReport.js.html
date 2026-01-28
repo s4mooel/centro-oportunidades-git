@@ -1,0 +1,1125 @@
+<script>
+//----------------------------------------------------------------------------------------------------------------
+//                                                     Conditional headers
+//----------------------------------------------------------------------------------------------------------------
+google.script.run.withSuccessHandler(function(data){
+  const email = data[0];
+  const realEmail = data[1];
+  const url = data[2];
+  const admins = ['lcgonzalez@davivienda.com', 'samuel.ibanez@davivienda.com']
+  if(admins.includes(realEmail)){
+    const menu = document.getElementById('menu');
+    const linkAdmin = document.createElement('a');
+    linkAdmin.classList.add('menu-button');
+    linkAdmin.href = url + "?page=admin";
+    linkAdmin.textContent = "Admin";
+    menu.append(linkAdmin);
+  }
+}).getEmail();
+
+//______________________________________________________________________________________________________________________________________________
+//                         Applying select2 library to each select that it will be use as filter input
+//______________________________________________________________________________________________________________________________________________
+      $(document).ready(function(){
+        $('#banca').select2({
+          placeholder: "Banca",
+          allowClear: true
+        });
+        $('#regional').select2({
+          placeholder: "Regional",
+          allowClear: true
+        });
+        $('#lider').select2({
+          placeholder: "Líder",
+          allowClear: true
+        });
+        $('#comercial').select2({
+          placeholder: "Comercial",
+          allowClear: true
+        });
+        $('#cargo').select2({
+          placeholder: "Cargo",
+          allowClear: true
+        });
+      });
+//------------------------------------------------------------------------------------------------------------------------------------------------
+//                                  Arrays to store data from back
+//------------------------------------------------------------------------------------------------------------------------------------------------
+      let comercialesArr = [];
+      let actasArr = [];
+      let desembolsosArr = [];
+      let colocacionArr = [];
+      let metasArr = [];
+      let vencimientoArr = [];
+      let visitasArr = [];
+      let captacionArr = [];
+      let transaccionalArr = [];
+      let sinergiaArr = [];
+      let nomRecArr = [];
+
+//------------------------------------------------------------------------------------------------------------------------------------------------
+//                                  Objects to store filtered data
+//-----------------------------------------------------------------------------------------------------------------------------------------------
+
+      const clientesANDorigin = {
+        totalClientes: 0,
+        clienteNuevo: 0,
+        carterizado: 0,
+        asignado: 0,
+        percentage_asignado: 0,
+        percentage_base_propia: 0
+      }
+
+      const actasReport = {
+        totalActas: 0,
+        sinActa: 0,
+        vigente: 0,
+        vencida: 0,
+        pronta: 0,
+        per_vigente: 0,
+        per_pronta: 0,
+        per_vencida: 0,
+        per_sin_acta: 0,
+        cupoApro: 0,
+        cupoSol: 0
+      }
+
+      const nomRecReport = {
+        nomina: 0,
+        recaudo: 0
+      }
+
+      const visitasReport = {
+        totalVisitas: 0,
+        meet: 0,
+        presencial: 0,
+        visitas_per: 0
+      }
+      const dynStatesCol = {
+        total_cupos: 0,
+      }
+
+      const dynStatesDesem = {
+        total_desembolsos: 0,
+        valor_desembolsado: 0,
+        valor_proyectado: 0,
+        valor_no_concretado: 0
+      }
+
+      const dynStatesCap = {
+        total_captacion: 0,
+        valor_negociado : 0,
+        valor_aceptado: 0,
+        valor_no_concretado: 0,
+        valor_renegociacion: 0
+      };
+
+      const dynStatesSeg = {
+        total_sinergia: 0,
+        valor_aceptado : 0,
+        valor_negociado : 0,
+        valor_no_concretado: 0,
+        valor_recaudado: 0
+      }
+
+      const dynStatesTran = {
+        total_transaccional: 0,
+        valor_efectivo_nomina : 0,
+        valor_negociado_nomina: 0,
+        valor_no_concretado_nomina: 0,
+        valor_renegociacion_nomina: 0,
+        valor_implementacion_nomina: 0,
+        valor_aceptado_nomina: 0,
+        valor_efectivo_recaudo : 0,
+        valor_negociado_recaudo: 0,
+        valor_no_concretado_recaudo: 0,
+        valor_renegociacion_recaudo: 0,
+        valor_implementacion_recaudo: 0,
+        valor_aceptado_recaudo: 0,
+        nomina_comercial: 0,
+        recaudo_comercial: 0
+      }
+
+  const loaderUp = document.getElementById('loader-up');
+  loaderUp.style.display = 'block';
+//----------------------------------------------------------------------------------------------------------------------------------------------
+//                                               From BACK
+//----------------------------------------------------------------------------------------------------------------------------------------------
+google.script.run.withSuccessHandler(function(data){
+  actasArr = JSON.parse(data.actas);
+  nomRecArr = JSON.parse(data.nom_rec);
+
+  //----------------------------------------------------------------------------------------------------------------------------------------
+  //                                               Actas Fuller
+  //----------------------------------------------------------------------------------------------------------------------------------------
+  
+  for(let i = 0; i < actasArr.length ; i++){
+    const row = actasArr[i];
+
+    if(row.origenCliente === 'Cliente Nuevo') clientesANDorigin.clienteNuevo += 1;
+    else if(row.origenCliente === 'Base propia') clientesANDorigin.carterizado += 1;
+    else if(row.origenCliente === 'Asignado') clientesANDorigin.asignado += 1;
+
+    if(row.estadoActa === 'Sin acta') actasReport.sinActa += 1;
+    else if(row.estadoActa === 'Vigente') actasReport.vigente += 1;
+    else if(row.estadoActa === 'Vencida') actasReport.vencida += 1;
+    else if(row.estadoActa === 'Pronta a vencer') actasReport.pronta += 1;
+
+    actasReport.cupoApro += row.cupoAprobado;
+    actasReport.cupoSol += row.cupoSolicitado;
+
+    const row_2 = nomRecArr[i];
+
+    if(row_2.nomina === 'SI') nomRecReport.nomina += 1;
+    if(row_2.recaudo === 'SI') nomRecReport.recaudo += 1;
+  }
+
+  clientesANDorigin.totalClientes = clientesANDorigin.carterizado + clientesANDorigin.asignado;
+  actasReport.totalActas = actasReport.vencida + actasReport.pronta + actasReport.vigente;
+  clientesANDorigin.percentage_base_propia = Number(clientesANDorigin.carterizado/clientesANDorigin.totalClientes*100).toFixed(2);
+  clientesANDorigin.percentage_asignado = Number(clientesANDorigin.asignado/clientesANDorigin.totalClientes*100).toFixed(2);
+
+  actasReport.per_vigente = Number(((actasReport.vigente+actasReport.pronta)/actasReport.totalActas)*100).toFixed(2);
+  actasReport.per_pronta = Number((actasReport.pronta/(actasReport.vigente+actasReport.pronta))*100).toFixed(2);
+  actasReport.per_vencida = Number(actasReport.vencida/actasReport.totalActas*100).toFixed(2);
+  actasReport.per_sin_acta = Number(actasReport.sinActa/clientesANDorigin.totalClientes*100).toFixed(2);
+  
+  document.getElementById('totalClientes').textContent = clientesANDorigin.totalClientes;
+  document.getElementById('Cliente Nuevo').textContent = clientesANDorigin.clienteNuevo;
+  document.getElementById('Base propia').textContent = clientesANDorigin.carterizado;
+  document.getElementById('Asignado').textContent = clientesANDorigin.asignado;
+  document.getElementById('percentage_asignado').textContent = clientesANDorigin.percentage_asignado + "%";
+  document.getElementById('percentage_base_propia').textContent = clientesANDorigin.percentage_base_propia + "%";
+
+  document.getElementById('totalActas').textContent = actasReport.totalActas;
+  document.getElementById('Vigente').textContent = actasReport.vigente + actasReport.pronta;
+  document.getElementById('Vencida').textContent = actasReport.vencida;
+  document.getElementById('Pronta a vencer').textContent = actasReport.pronta;
+  document.getElementById('Sin acta').textContent = actasReport.sinActa;
+  document.getElementById('per_vigente').textContent = actasReport.per_vigente + "%";
+  document.getElementById('per_pronta').textContent = actasReport.per_pronta + "%";
+  document.getElementById('per_vencida').textContent = actasReport.per_vencida + "%";
+  document.getElementById('per_sin_acta').textContent = actasReport.per_sin_acta + "%";
+  document.getElementById('cupoAprobado').textContent = "$" + String(actasReport.cupoApro).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  document.getElementById('cupoSolicitado').textContent = "$" + String(actasReport.cupoSol).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  console.log(actasReport)
+  //---------------------------------------------------------------------------------------------------------------------
+  //                                               Nómina y Recaudo Fuller
+  //----------------------------------------------------------------------------------------------------------------------
+  /* for(let i = 0; i < nomRecArr.length; i++){
+    
+  } */
+
+  document.getElementById('Qnomina').textContent = nomRecReport.nomina;
+  document.getElementById('Qrecaudo').textContent = nomRecReport.recaudo;
+
+  document.getElementById('nomina').textContent = Number(nomRecReport.nomina/(clientesANDorigin.asignado + clientesANDorigin.carterizado)*100).toFixed(2) + "%";
+  document.getElementById('recaudo').textContent = Number(nomRecReport.recaudo/(clientesANDorigin.asignado + clientesANDorigin.carterizado)*100).toFixed(2) + "%";
+
+  loaderUp.style.display = 'none';
+}).reportByTable("dataClientes");
+//-----------------------------------------------------------------------------------------------------------------------------
+//                                               Visitas Fuller
+//------------------------------------------------------------------------------------------------------------------------------
+google.script.run.withSuccessHandler(function(data){
+  visitasArr = JSON.parse(data.visitas);
+  comercialesArr = JSON.parse(data.comerciales);
+
+  for(let i = 0; i < visitasArr.length ; i++){
+    const row = visitasArr[i];
+    visitasReport.totalVisitas += 1;
+    if(row.estado === 'Meet') visitasReport.meet += 1;
+    else if(row.estado === 'Presencial') visitasReport.presencial += 1;
+  }
+
+  const tempVisComer = Object.keys(visitasReport);
+
+  console.log(visitasReport);
+
+
+  document.getElementById('totalVisitas').textContent = visitasReport.totalVisitas;
+  document.getElementById('Presencial').textContent = visitasReport.presencial;
+  document.getElementById('Meet').textContent = visitasReport.meet;
+  document.getElementById('visitas_per').textContent = Number(visitasReport.totalVisitas/comercialesArr.length).toFixed(2);
+  document.getElementById('per_presencial').textContent = Number(visitasReport.presencial/visitasReport.totalVisitas*100).toFixed(2) + "%";
+  document.getElementById('per_meet').textContent = Number(visitasReport.meet/visitasReport.totalVisitas*100).toFixed(2) + "%";
+}).reportByTable("dataVisitas");
+//------------------------------------------------------------------------------------------------------------------------------
+//                                               Cupos de crédito Fuller
+//----------------------------------------------------------------------------------------------------------------------------
+
+google.script.run.withSuccessHandler(function(data){
+  colocacionArr = JSON.parse(data.colocacion);
+  for(let i = 0; i < colocacionArr.length ; i++){
+    const row = colocacionArr[i];
+    if(row.estado in dynStatesCol){
+        dynStatesCol[row.estado] += 1;
+        dynStatesCol.total_cupos += 1
+    } else {
+      if(row.estado !== 0 && row.estado !== '') {
+        dynStatesCol[row.estado] = 1;
+        dynStatesCol.total_cupos += 1;
+      }
+    }
+  }
+
+//console.log(dynStatesCol);
+
+  for(const state in dynStatesCol){
+    const tempState = document.getElementById(state);
+    if(tempState !== null && tempState !== undefined){
+      tempState.textContent = dynStatesCol[state];
+      if(state !== 'total_cupos') {
+        const perState = document.getElementById("per " + state);
+        perState.textContent = Number(dynStatesCol[state] / dynStatesCol.total_cupos * 100).toFixed(2) + "%";
+      }   
+    }
+  }
+}).reportByTable("dataColocacion");
+//--------------------------------------------------------------------------------------------------------------------------------
+//                                               Desembolsos Fuller
+//-----------------------------------------------------------------------------------------------------------------------------
+google.script.run.withSuccessHandler(function(data){
+  desembolsosArr = JSON.parse(data.desembolsos);
+
+  for(let i = 0; i < desembolsosArr.length ; i++){
+    const row = desembolsosArr[i];
+    if(row.estado in dynStatesDesem){
+      dynStatesDesem[row.estado] += 1;
+      dynStatesDesem.total_desembolsos += 1;
+      if(row.estado === 'Proyectado') dynStatesDesem.valor_proyectado += row.valor_desembolso;
+      else if(row.estado === 'Desembolsado') dynStatesDesem.valor_desembolsado += row.valor_desembolso;
+      else if(row.estado === 'No Concretado') dynStatesDesem.valor_no_concretado += row.valor_desembolso;
+    } else {
+      dynStatesDesem[row.estado] = 1;
+      dynStatesDesem.total_desembolsos += 1;
+    }
+  }
+
+  dynStatesDesem.total_desembolsos = dynStatesDesem['Desembolsado'] + dynStatesDesem['Proyectado'] + dynStatesDesem['No Concretado'];
+
+//console.log(dynStatesDesem);
+
+  for(const state in dynStatesDesem){
+    const tempState = document.getElementById(state);
+    if(tempState !== null && tempState !== undefined){
+      if(!state.includes('valor') && !state.includes('total') && !state.includes('comercial')) {
+        const perState = document.getElementById("per " + state);
+        perState.textContent = Number(dynStatesDesem[state] / dynStatesDesem.total_desembolsos * 100).toFixed(2) + "%";
+      }
+      if(state === 'valor_desembolsado' || state === 'valor_proyectado' || state === 'valor_no_concretado') tempState.textContent = "$" + String(dynStatesDesem[state]).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+      else tempState.textContent = dynStatesDesem[state];
+    }
+  }
+}).reportByTable("dataDesembolsos");
+//--------------------------------------------------------------------------------------------------------------------------------
+//                                               Captación Fuller
+//-----------------------------------------------------------------------------------------------------------------------------
+google.script.run.withSuccessHandler(function(data){
+  captacionArr = JSON.parse(data.captacion);
+  for(let i = 0; i < captacionArr.length ; i++){
+    const row = captacionArr[i];
+    if(row.estado !== '' && row.estado !== 'Por gestionar'){
+      if(row.estado === 'No Concretado') dynStatesCap.valor_no_concretado += row.valor_negociado;
+      else if(row.estado === 'Aceptado') dynStatesCap.valor_aceptado += row.valor_aceptado;
+      else if(row.estado === 'Negociación') dynStatesCap.valor_negociado += row.valor_negociado;
+      else if(row.estado === 'Renegociación') dynStatesCap.valor_renegociacion += row.valor_negociado;
+      if(row.estado in dynStatesCap){
+        dynStatesCap[row.estado] += 1
+      } else {
+        dynStatesCap[row.estado] = 1
+      }
+    }
+  }
+
+  dynStatesCap.total_captacion = dynStatesCap['No Concretado'] + dynStatesCap['Aceptado'] + dynStatesCap['Negociación'] + dynStatesCap['Renegociación'];
+  //console.log(dynStatesCap);
+
+  for(const state in dynStatesCap){
+    const tempState = document.getElementById(state + " Captación");
+    if(tempState !== null && tempState !== undefined){
+      if(!state.includes('valor') && !state.includes('total')) {
+        const perState = document.getElementById("per " + state + " Captación");
+        perState.textContent = Number(dynStatesCap[state] / dynStatesCap.total_captacion * 100).toFixed(2) + "%";
+      }
+      if(state === 'valor_aceptado' || state === 'valor_negociado' || state === 'valor_no_concretado' || state === 'valor_renegociacion') {
+        tempState.textContent = "$" + String(dynStatesCap[state]).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+      } else {
+        tempState.textContent = dynStatesCap[state];
+      }
+    }
+  }
+}).reportByTable("dataCaptacion");
+//--------------------------------------------------------------------------------------------------------------------------------
+//                                               Sinergía Fuller
+//-----------------------------------------------------------------------------------------------------------------------------
+google.script.run.withSuccessHandler(function(data){
+  sinergiaArr = JSON.parse(data.sinergia);
+  for(let i = 0; i < sinergiaArr.length ; i++){
+    const row = sinergiaArr[i];
+    if(row.estado === 'No Concretado') dynStatesSeg.valor_no_concretado += row.valor_negociado;
+    else if(row.estado === 'Aceptado') dynStatesSeg.valor_aceptado += row.valor_negociado;
+    else if(row.estado === 'Negociación') dynStatesSeg.valor_negociado += row.valor_negociado;
+    else if (row.estado === 'Recaudado') dynStatesSeg.valor_recaudado += row.valor_aceptado;
+    if(row.estado in dynStatesSeg){
+      dynStatesSeg[row.estado] += 1
+    } else {
+      dynStatesSeg[row.estado] = 1
+    }
+  }
+
+  dynStatesSeg.total_sinergia = dynStatesSeg['No Concretado'] + dynStatesSeg['Aceptado'] + dynStatesSeg['Negociación'] + dynStatesSeg['Recaudado']
+  //console.log(dynStatesSeg);
+
+  for(const state in dynStatesSeg){
+    const tempState = document.getElementById(state + " Sinergía");
+    if(tempState !== null && tempState !== undefined){
+      if(!state.includes('valor') && !state.includes('total')) {
+        const perState = document.getElementById("per " + state + " Sinergía");
+        perState.textContent = Number(dynStatesSeg[state] / dynStatesSeg.total_sinergia * 100).toFixed(2) + "%";
+      }
+      if(state === 'valor_aceptado' || state === 'valor_negociado' || state === 'valor_no_concretado' || state === 'valor_recaudado') {
+        tempState.textContent = "$" + String(dynStatesSeg[state]).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+      } else {
+        tempState.textContent = dynStatesSeg[state];
+      }
+    }
+  }
+}).reportByTable("dataSeguros");
+//--------------------------------------------------------------------------------------------------------------------------------
+//                                               Transaccional Fuller
+//-----------------------------------------------------------------------------------------------------------------------------
+google.script.run.withSuccessHandler(function(data){
+  transaccionalArr = JSON.parse(data.transaccional);
+  for(let i = 0; i < transaccionalArr.length; i++){
+    const row = transaccionalArr[i];
+    if(row.estado !== 'Por gestionar' && row.estado !== '' && row.producto !== ''){
+      if(row.producto === 'Nomina'){
+        dynStatesTran.nomina_comercial += 1;
+        if(row.estado === 'No Concretado') dynStatesTran.valor_no_concretado_nomina += row.valor_negociado;
+        else if(row.estado === 'Efectivo') dynStatesTran.valor_efectivo_nomina += row.valor_aceptado;
+        else if(row.estado === 'Negociación') dynStatesTran.valor_negociado_nomina += row.valor_negociado;
+        else if(row.estado === 'Aceptado') dynStatesTran.valor_aceptado_nomina += row.valor_negociado;
+        else if(row.estado === 'Implementación') dynStatesTran.valor_implementacion_nomina += row.valor_negociado;
+        else if(row.estado === 'Renegociación') dynStatesTran.valor_renegociacion_nomina += row.valor_negociado;
+        const forNomina = row.estado + " Nómina";
+        if(forNomina in dynStatesTran){
+          dynStatesTran[forNomina] += 1;
+        } else {
+          dynStatesTran[forNomina] = 1;
+        }
+      } else {
+        dynStatesTran.recaudo_comercial += 1;
+        if(row.estado === 'No Concretado') dynStatesTran.valor_no_concretado_recaudo += row.valor_negociado;
+        else if(row.estado === 'Efectivo') dynStatesTran.valor_efectivo_recaudo += row.valor_aceptado;
+        else if(row.estado === 'Negociación') dynStatesTran.valor_negociado_recaudo += row.valor_negociado;
+        else if(row.estado === 'Aceptado') dynStatesTran.valor_aceptado_recaudo += row.valor_negociado;
+        else if(row.estado === 'Implementación') dynStatesTran.valor_implementacion_recaudo += row.valor_negociado;
+        else if(row.estado === 'Renegociación') dynStatesTran.valor_renegociacion_recaudo += row.valor_negociado;
+        const forRecaudo = row.estado + " Recaudo";
+        if(forRecaudo in dynStatesTran){
+          dynStatesTran[forRecaudo] += 1;
+        } else {
+          dynStatesTran[forRecaudo] = 1;
+        }
+      }
+    }
+  }
+
+  dynStatesTran.total_transaccional = dynStatesTran.nomina_comercial + dynStatesTran.recaudo_comercial;
+
+  console.log(dynStatesTran);
+
+  for(const state in dynStatesTran){
+    const tempState = document.getElementById(state);
+    if(tempState !== null && tempState !== undefined){
+      if(!state.includes('valor') && !state.includes('total') && !state.includes('comercial')) {
+        const perState = document.getElementById("per " + state);
+        perState.textContent = Number(dynStatesTran[state] / dynStatesTran.total_transaccional * 100).toFixed(2) + "%";
+      }
+      if(state.includes('valor_aceptado') || state.includes('valor_negociado') || state.includes('valor_no_concretado') || state.includes('valor_renegociacion') || state.includes('valor_efectivo') || state.includes('valor_implementacion')) {
+        tempState.textContent = "$" + String(dynStatesTran[state]).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+      } else {
+        tempState.textContent = dynStatesTran[state];
+      }
+    }
+  }
+}).reportByTable("dataTransaccional");
+      //-------------------------------------------------------------------------------------------------------
+      //                                          Total Report
+      //-------------------------------------------------------------------------------------------------------
+      google.script.run.withSuccessHandler(function(data){
+        console.time("Execuction time in front")
+        
+        comercialesArr = JSON.parse(data.comerciales);
+        metasArr = JSON.parse(data.metas);
+
+        console.timeEnd("Execuction time in front")
+
+      }).report();
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+//                                               Filter listener
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+      filtros = {
+        banca : '',
+        regional : '',
+        lider : '',
+        comercial : '',
+        cargo : '',
+        dateInit: '',
+        dateEnd: ''
+      }
+
+//----------------------------------------------------------------------------------------------------------------------------------------------
+//                                               Global filter to use with the select
+//----------------------------------------------------------------------------------------------------------------------------------------------
+
+      function globalFilter(row, f) {
+        const {DateTime} = luxon;
+        let resultFilters = true;
+        
+        if(f.banca !== '') resultFilters &&= row.banca !== '' && f.banca.includes(row.banca);
+        if(f.regional !== '') resultFilters &&= row.regional !== '' && f.regional.includes(row.regional);
+        if(f.lider !== '') resultFilters &&= row.lider !== '' && f.lider.includes(row.lider);
+        if(f.cargo !== '') resultFilters &&= row.cargo !== '' && f.cargo.includes(row.cargo);
+        if(f.comercial !== '') resultFilters &&= row.comercial !== '' && f.comercial.includes(row.comercial);
+        if('fecha' in row){
+          //console.log("The dates are: " + f.dateInit + ", " +  f.dateEnd);
+          const startDate = f.dateInit ? DateTime.fromISO(f.dateInit) : null;
+          const endDate = f.dateEnd ? DateTime.fromISO(f.dateEnd) : null;
+          const cellDate = DateTime.fromISO(row.fecha);
+          if(f.dateInit !== '' && f.dateEnd === '') {
+            resultFilters &&= cellDate.toMillis() >= startDate.startOf('day').toMillis();
+          } else if(f.dateInit === '' && f.dateEnd !== '') {
+            resultFilters &&= cellDate.toMillis() <= endDate.endOf('day').toMillis();
+          } else if(f.dateInit !== '' && f.dateEnd !== '') {
+              resultFilters &&= cellDate.toMillis() >= startDate.startOf('day').toMillis() && cellDate.toMillis() <= endDate.endOf('day').toMillis();
+          }
+        }
+
+        
+        return resultFilters;
+      }
+      //-----------------------------------------------------------------------------------------------------------------------
+      //                                               Actas Filter
+      //---------------------------------------------------------------------------------------------------------------------
+      function actasFilter(data, f) {
+
+        const keysOrigin = Object.keys(clientesANDorigin);
+        for(let i = 0; i < keysOrigin.length ; i++){
+          clientesANDorigin[keysOrigin[i]] = 0;
+        }
+
+        const keysActas = Object.keys(actasReport);
+        for(let i = 0; i < keysActas.length ; i++){
+          actasReport[keysActas[i]] = 0;
+        }
+        
+
+        if(f.banca === '' && f.regional === '' && f.lider === '' && f.cargo === '' && f.comercial === ''){
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+
+            if(row.origenCliente === 'Cliente Nuevo') clientesANDorigin.clienteNuevo += 1;
+            else if(row.origenCliente === 'Base propia') clientesANDorigin.carterizado += 1;
+            else if(row.origenCliente === 'Asignado') clientesANDorigin.asignado += 1;
+
+            if(row.estadoActa === 'Sin acta') actasReport.sinActa += 1;
+            else if(row.estadoActa === 'Vigente') actasReport.vigente += 1;
+            else if(row.estadoActa === 'Vencida') actasReport.vencida += 1;
+            else if(row.estadoActa === 'Pronta a vencer') actasReport.pronta += 1;
+
+            actasReport.cupoApro += row.cupoAprobado;
+            actasReport.cupoSol += row.cupoSolicitado;
+          }
+        } else {
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            let resultFilters = globalFilter(row, f);
+            
+            if(resultFilters){
+              if(row.origenCliente === 'Cliente Nuevo') clientesANDorigin.clienteNuevo += 1;
+              else if(row.origenCliente === 'Base propia') clientesANDorigin.carterizado += 1;
+              else if(row.origenCliente === 'Asignado') clientesANDorigin.asignado += 1;
+
+              if(row.estadoActa === 'Sin acta') actasReport.sinActa += 1;
+              else if(row.estadoActa === 'Vigente') actasReport.vigente += 1;
+              else if(row.estadoActa === 'Vencida') actasReport.vencida += 1;
+              else if(row.estadoActa === 'Pronta a vencer') actasReport.pronta += 1;
+
+              actasReport.cupoApro += row.cupoAprobado;
+              actasReport.cupoSol += row.cupoSolicitado;
+            }
+          }
+        }
+
+        clientesANDorigin.totalClientes = clientesANDorigin.carterizado + clientesANDorigin.asignado;
+
+        actasReport.totalActas = actasReport.vencida + actasReport.pronta + actasReport.vigente;
+
+        clientesANDorigin.percentage_base_propia = Number(clientesANDorigin.carterizado/clientesANDorigin.totalClientes*100).toFixed(2);
+        clientesANDorigin.percentage_asignado = Number(clientesANDorigin.asignado/clientesANDorigin.totalClientes*100).toFixed(2);
+
+        actasReport.per_vigente = Number(((actasReport.vigente+actasReport.pronta)/actasReport.totalActas)*100).toFixed(2);
+        actasReport.per_pronta = Number((actasReport.pronta/(actasReport.vigente+actasReport.pronta))*100).toFixed(2);
+        actasReport.per_vencida = Number(actasReport.vencida/actasReport.totalActas*100).toFixed(2);
+        actasReport.per_sin_acta = Number(actasReport.sinActa/clientesANDorigin.totalClientes*100).toFixed(2);
+
+        document.getElementById('totalClientes').textContent = clientesANDorigin.totalClientes;
+        document.getElementById('Cliente Nuevo').textContent = clientesANDorigin.clienteNuevo;
+        document.getElementById('Base propia').textContent = clientesANDorigin.carterizado;
+        document.getElementById('Asignado').textContent = clientesANDorigin.asignado;
+        document.getElementById('percentage_asignado').textContent = clientesANDorigin.percentage_asignado + "%";
+        document.getElementById('percentage_base_propia').textContent = clientesANDorigin.percentage_base_propia + "%";
+
+        document.getElementById('totalActas').textContent = actasReport.totalActas;
+        document.getElementById('Vigente').textContent = actasReport.vigente + actasReport.pronta;
+        document.getElementById('Vencida').textContent = actasReport.vencida;
+        document.getElementById('Pronta a vencer').textContent = actasReport.pronta;
+        document.getElementById('per_vigente').textContent = actasReport.per_vigente + "%";
+        document.getElementById('per_pronta').textContent = actasReport.per_pronta + "%";
+        document.getElementById('per_vencida').textContent = actasReport.per_vencida + "%";
+        document.getElementById('per_sin_acta').textContent = actasReport.per_sin_acta + "%";
+        document.getElementById('Sin acta').textContent = actasReport.sinActa;
+        document.getElementById('cupoAprobado').textContent = "$" + String(actasReport.cupoApro).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+        document.getElementById('cupoSolicitado').textContent = "$" + String(actasReport.cupoSol).replace(/\B(?=(\d{3})+(?!\d))/g,".");    
+      }
+
+      //--------------------------------------------------------------------------------------------------------------------------
+      //                                               Nómina y recaudo Filter
+      //----------------------------------------------------------------------------------------------------------------------
+
+      function nomRecFilter(data,f){
+        
+        nomRecReport.nomina = nomRecReport.recaudo = 0;
+
+        if(f.banca === '' && f.regional === '' && f.lider === '' && f.cargo === '' && f.comercial === ''){
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            if(row.nomina === 'SI') nomRecReport.nomina += 1;
+            if(row.recaudo === 'SI') nomRecReport.recaudo += 1;
+          }
+        } else {
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            let resultFilters = globalFilter(row, f);
+            
+            if(resultFilters){
+              if(row.nomina === 'SI') nomRecReport.nomina += 1;
+              if(row.recaudo === 'SI') nomRecReport.recaudo += 1;
+            }
+          }
+        }
+
+        document.getElementById('Qnomina').textContent = nomRecReport.nomina;
+        document.getElementById('Qrecaudo').textContent = nomRecReport.recaudo;
+
+        document.getElementById('nomina').textContent = Number(nomRecReport.nomina/(clientesANDorigin.asignado + clientesANDorigin.carterizado)*100).toFixed(2) + "%";
+        document.getElementById('recaudo').textContent = Number(nomRecReport.recaudo/(clientesANDorigin.asignado + clientesANDorigin.carterizado)*100).toFixed(2) + "%";
+
+      }
+      //-------------------------------------------------------------------------------------------------------------------------------
+      //                                               Visitas Filter
+      //----------------------------------------------------------------------------------------------------------------------------
+      function visitasFilter(data, f ){
+
+
+        const keysVisitas = Object.keys(visitasReport);
+        for(let i = 0; i < keysVisitas.length ; i++){
+          visitasReport[keysVisitas[i]] = 0;
+        }
+        //console.log(visitasReport)
+        if(f.banca === '' && f.regional === '' && f.lider === '' && f.cargo === '' && f.comercial === '' && f.dateInit === '' && f.dateEnd === ''){
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            visitasReport.totalVisitas += 1;
+            if(row.estado === 'Meet') visitasReport.meet += 1;
+            else if(row.estado === 'Presencial') visitasReport.presencial += 1;
+          }
+          document.getElementById('visitas_per').textContent = Number(visitasReport.totalVisitas/comercialesArr.length).toFixed(2);
+        } else {
+          let countComer = 0;
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            let resultFilters = globalFilter(row, f);
+            //console.log(resultFilters);
+            if(resultFilters){
+              visitasReport.totalVisitas += 1;
+              if(row.estado === 'Meet') visitasReport.meet += 1;
+              else if(row.estado === 'Presencial') visitasReport.presencial += 1;
+            }
+          }
+          for(let i = 0; i < comercialesArr.length; i++){
+            const row = comercialesArr[i];
+            let resultFilters = globalFilter(row, f);
+            if(resultFilters){
+              countComer++;
+            }
+          }
+          document.getElementById('visitas_per').textContent = Number(visitasReport.totalVisitas/countComer).toFixed(2);
+        }
+
+        //console.log(visitasReport)
+
+        document.getElementById('totalVisitas').textContent = visitasReport.totalVisitas;
+        document.getElementById('Presencial').textContent = visitasReport.presencial;
+        document.getElementById('Meet').textContent = visitasReport.meet;
+        document.getElementById('per_presencial').textContent = Number(visitasReport.presencial/visitasReport.totalVisitas*100).toFixed(2) + "%";
+        document.getElementById('per_meet').textContent = Number(visitasReport.meet/visitasReport.totalVisitas*100).toFixed(2) + "%";
+        
+      }
+      //--------------------------------------------------------------------------------------------------------------------------
+      //                                               Desembolsos Filter
+      //-----------------------------------------------------------------------------------------------------------------------------
+      function desembolsosFilter(data, f){
+
+        const keysDesem = Object.keys(dynStatesDesem)
+        for(let i = 0; i < keysDesem.length; i++){
+          dynStatesDesem[keysDesem[i]] = 0;
+        }
+
+        if(f.banca === '' && f.regional === '' && f.lider === '' && f.cargo === '' && f.comercial === '' && f.dateInit === '' && f.dateEnd === ''){
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            if(row.estado in dynStatesDesem){
+              dynStatesDesem[row.estado] += 1;
+              if(row.estado === 'Proyectado') dynStatesDesem.valor_proyectado += row.valor_desembolso;
+              else if(row.estado === 'Desembolsado') dynStatesDesem.valor_desembolsado += row.valor_desembolso;
+              else if(row.estado === 'No Concretado') dynStatesDesem.valor_no_concretado += row.valor_desembolso;
+            }
+          }
+        } else {
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            let resultFilters = globalFilter(row, f);
+            if(resultFilters){
+              if(row.estado in dynStatesDesem){
+                dynStatesDesem[row.estado] += 1;
+                if(row.estado === 'Proyectado') dynStatesDesem.valor_proyectado += row.valor_desembolso;
+                else if(row.estado === 'Desembolsado') dynStatesDesem.valor_desembolsado += row.valor_desembolso;
+                else if(row.estado === 'No Concretado') dynStatesDesem.valor_no_concretado += row.valor_desembolso;
+              }
+            }
+          }
+        }
+
+        dynStatesDesem.total_desembolsos = dynStatesDesem['Desembolsado'] + dynStatesDesem['Proyectado'] + dynStatesDesem['No Concretado'];
+
+        console.log(dynStatesDesem);
+
+        for(const state in dynStatesDesem){
+          const tempState = document.getElementById(state);
+          if(tempState !== null && tempState !== undefined){
+            if(!state.includes('valor') && !state.includes('total')) {
+              const perState = document.getElementById("per " + state);
+              perState.textContent = Number(dynStatesDesem[state] / dynStatesDesem.total_desembolsos * 100).toFixed(2) + "%";
+            }
+            if(state === 'valor_desembolsado' || state === 'valor_proyectado' || state === 'valor_no_concretado') tempState.textContent = "$" + String(dynStatesDesem[state]).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+            else tempState.textContent = dynStatesDesem[state];
+          }
+        }
+      }
+      //---------------------------------------------------------------------------------------------------------------------------
+      //                                               Cupos de crédito Filter
+      //----------------------------------------------------------------------------------------------------------------------
+      function colocacionFilter(data, f) {
+        const keysCol = Object.keys(dynStatesCol)
+        for(let i = 0; i < keysCol.length; i++){
+          dynStatesCol[keysCol[i]] = 0;
+        }
+
+        if(f.banca === '' && f.regional === '' && f.lider === '' && f.cargo === '' && f.comercial === '' && f.dateInit === '' && f.dateEnd === ''){
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            if(row.estado in dynStatesCol){
+              dynStatesCol[row.estado] += 1;
+              dynStatesCol.total_cupos += 1
+            }
+          }
+        } else {
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            let resultFilters = globalFilter(row, f);
+            if(resultFilters){
+              if(row.estado in dynStatesCol){
+                dynStatesCol[row.estado] += 1;
+                dynStatesCol.total_cupos += 1
+              }
+            }
+          }
+        }
+
+        for(const state in dynStatesCol){
+          const tempState = document.getElementById(state);
+          if(tempState !== null && tempState !== undefined){
+            tempState.textContent = dynStatesCol[state];
+            if(state !== 'total_cupos') {
+              const perState = document.getElementById("per " + state);
+              perState.textContent = Number(dynStatesCol[state] / dynStatesCol.total_cupos * 100).toFixed(2) + "%";
+            }   
+          }
+        }
+      }
+      //---------------------------------------------------------------------------------------------------------------------
+      //                                               Captación Filter
+      //------------------------------------------------------------------------------------------------------------------------
+      function captacionFilter (data, f) {
+
+        const keysCap = Object.keys(dynStatesCap);
+        for(let i = 0; i < keysCap.length ; i++){
+          dynStatesCap[keysCap[i]] = 0;
+        }
+
+        //console.log(dynStatesCap);
+        
+        if(f.banca === '' && f.regional === '' && f.lider === '' && f.cargo === '' && f.comercial === '' && f.dateInit === '' && f.dateEnd === ''){
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            if(row.estado !== '' && row.estado !== 'Por gestionar'){
+              if(row.estado === 'No Concretado') dynStatesCap.valor_no_concretado += Number(row.valor_negociado);
+              else if(row.estado === 'Aceptado') dynStatesCap.valor_aceptado += Number(row.valor_aceptado);
+              else if(row.estado === 'Negociación') dynStatesCap.valor_negociado += Number(row.valor_negociado);
+              else if(row.estado === 'Renegociación') dynStatesCap.valor_renegociacion += Number(row.valor_negociado);
+              if(row.estado in dynStatesCap){
+                dynStatesCap[row.estado] += 1
+              }
+            }
+          }
+        } else {
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            let resultFilters = globalFilter(row, f);
+            if(resultFilters){
+              if(row.estado !== '' && row.estado !== 'Por gestionar'){
+                //console.log("Cap" + JSON.stringify(row));
+                if(row.estado === 'No Concretado') dynStatesCap.valor_no_concretado += Number(row.valor_negociado);
+                else if(row.estado === 'Aceptado') dynStatesCap.valor_aceptado += Number(row.valor_aceptado);
+                else if(row.estado === 'Negociación') dynStatesCap.valor_negociado += Number(row.valor_negociado);
+                else if(row.estado === 'Renegociación') dynStatesCap.valor_renegociacion += Number(row.valor_negociado);
+                if(row.estado in dynStatesCap){
+                  dynStatesCap[row.estado] += 1
+                }
+              }
+            }
+          }
+        }
+
+        //console.log(dynStatesCap);
+
+        dynStatesCap.total_captacion = dynStatesCap['No Concretado'] + dynStatesCap['Aceptado'] + dynStatesCap['Negociación'] + dynStatesCap['Renegociación'];
+        //console.log(dynStatesCap);
+
+        for(const state in dynStatesCap){
+          const tempState = document.getElementById(state + " Captación");
+          if(tempState !== null && tempState !== undefined){
+            if(!state.includes('valor') && !state.includes('total')) {
+              const perState = document.getElementById("per " + state + " Captación");
+              perState.textContent = Number(dynStatesCap[state] / dynStatesCap.total_captacion * 100).toFixed(2) + "%";
+            }
+            if(state === 'valor_aceptado' || state === 'valor_negociado' || state === 'valor_no_concretado' || state === 'valor_renegociacion') {
+              tempState.textContent = "$" + String(dynStatesCap[state]).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+            } else {
+              tempState.textContent = dynStatesCap[state];
+            }
+          }
+        }
+      }
+      //-------------------------------------------------------------------------------------------------------------------
+      //                                               Sinergía Filter
+      //----------------------------------------------------------------------------------------------------------------------
+      function sinergiaFilter (data,f){
+        const keysSeg = Object.keys(dynStatesSeg);
+        for(let i = 0; i < keysSeg.length ; i++){
+          dynStatesSeg[keysSeg[i]] = 0;
+        }
+
+        if(f.banca === '' && f.regional === '' && f.lider === '' && f.cargo === '' && f.comercial === '' && f.dateInit === '' && f.dateEnd === ''){
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            
+            if(row.estado === 'No Concretado') dynStatesSeg.valor_no_concretado += row.valor_negociado;
+            else if(row.estado === 'Aceptado') dynStatesSeg.valor_aceptado += row.valor_aceptado;
+            else if(row.estado === 'Negociación') dynStatesSeg.valor_negociado += row.valor_negociado;
+            else if(row.estado === 'Recaudado') dynStatesSeg.valor_recaudado += row.valor_negociado;
+            if(row.estado in dynStatesSeg){
+              dynStatesSeg[row.estado] += 1
+            } 
+
+          }
+        } else {
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            let resultFilters = globalFilter(row, f);
+            if(resultFilters){
+
+              if(row.estado === 'No Concretado') dynStatesSeg.valor_no_concretado += row.valor_negociado;
+              else if(row.estado === 'Aceptado') dynStatesSeg.valor_aceptado += row.valor_aceptado;
+              else if(row.estado === 'Negociación') dynStatesSeg.valor_negociado += row.valor_negociado;
+              else if(row.estado === 'Recaudado') dynStatesSeg.valor_recaudado += row.valor_negociado;
+              if(row.estado in dynStatesSeg){
+                dynStatesSeg[row.estado] += 1
+              } 
+
+            }
+          }
+        }
+
+        dynStatesSeg.total_sinergia = dynStatesSeg['No Concretado'] + dynStatesSeg['Aceptado'] + dynStatesSeg['Negociación'] + dynStatesSeg['Recaudado']
+        //console.log(dynStatesSeg);
+
+        for(const state in dynStatesSeg){
+          const tempState = document.getElementById(state + " Sinergía");
+          if(tempState !== null && tempState !== undefined){
+            if(!state.includes('valor') && !state.includes('total')) {
+              const perState = document.getElementById("per " + state + " Sinergía");
+              perState.textContent = Number(dynStatesSeg[state] / dynStatesSeg.total_sinergia * 100).toFixed(2) + "%";
+            }
+            if(state === 'valor_aceptado' || state === 'valor_negociado' || state === 'valor_no_concretado' || state === 'valor_recaudado') {
+              tempState.textContent = "$" + String(dynStatesSeg[state]).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+            } else {
+              tempState.textContent = dynStatesSeg[state];
+            }
+          }
+        }
+
+
+      }
+
+      //------------------------------------------------------------------------------------------------------------------
+      //                                               Transaccional Filter
+      //----------------------------------------------------------------------------------------------------------------------
+
+      function transaccionalFilter (data, f){
+
+        const keysTran = Object.keys(dynStatesTran);
+        for(let i = 0; i < keysTran.length ; i++){
+          dynStatesTran[keysTran[i]] = 0;
+        }
+
+        if(f.banca === '' && f.regional === '' && f.lider === '' && f.cargo === '' && f.comercial === '' && f.dateInit === '' && f.dateEnd === ''){
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            if(row.estado !== 'Por gestionar' && row.estado !== '' && row.producto !== ''){
+              if(row.producto === 'Nomina'){
+                
+                dynStatesTran.nomina_comercial += 1;
+                if(row.estado === 'No Concretado') dynStatesTran.valor_no_concretado_nomina += row.valor_negociado;
+              else if(row.estado === 'Efectivo') dynStatesTran.valor_efectivo_nomina += row.valor_aceptado;
+              else if(row.estado === 'Negociación') dynStatesTran.valor_negociado_nomina += row.valor_negociado;
+              else if(row.estado === 'Aceptado') dynStatesTran.valor_aceptado_nomina += row.valor_negociado;
+              else if(row.estado === 'Implementación') dynStatesTran.valor_implementacion_nomina += row.valor_negociado;
+              else if(row.estado === 'Renegociación') dynStatesTran.valor_renegociacion_nomina += row.valor_negociado;
+                const forNomina = row.estado + " Nómina";
+                if(forNomina in dynStatesTran){
+                  dynStatesTran[forNomina] += 1;
+                }
+              } else {
+                
+                dynStatesTran.recaudo_comercial += 1;
+                if(row.estado === 'No Concretado') dynStatesTran.valor_no_concretado_recaudo += row.valor_negociado;
+                else if(row.estado === 'Efectivo') dynStatesTran.valor_efectivo_recaudo += row.valor_aceptado;
+                else if(row.estado === 'Negociación') dynStatesTran.valor_negociado_recaudo += row.valor_negociado;
+                else if(row.estado === 'Aceptado') dynStatesTran.valor_aceptado_recaudo += row.valor_negociado;
+                else if(row.estado === 'Implementación') dynStatesTran.valor_implementacion_recaudo += row.valor_negociado;
+                else if(row.estado === 'Renegociación') dynStatesTran.valor_renegociacion_recaudo += row.valor_negociado;
+                const forRecaudo = row.estado + " Recaudo";
+                if(forRecaudo in dynStatesTran){
+                  dynStatesTran[forRecaudo] += 1;
+                }
+              }
+            }
+          }
+        } else {
+          for(let i = 0; i < data.length ; i++){
+            const row = data[i];
+            let resultFilters = globalFilter(row, f);
+            if(resultFilters){
+              if(row.estado !== 'Por gestionar' && row.estado !== '' && row.producto !== ''){
+                if(row.producto === 'Nomina'){
+                  dynStatesTran.nomina_comercial += 1;
+                  if(row.estado === 'No Concretado') dynStatesTran.valor_no_concretado_nomina += row.valor_negociado;
+                  else if(row.estado === 'Efectivo') dynStatesTran.valor_efectivo_nomina += row.valor_aceptado;
+                  else if(row.estado === 'Negociación') dynStatesTran.valor_negociado_nomina += row.valor_negociado;
+                  else if(row.estado === 'Aceptado') dynStatesTran.valor_aceptado_nomina += row.valor_negociado;
+                  else if(row.estado === 'Implementación') dynStatesTran.valor_implementacion_nomina += row.valor_negociado;
+                  else if(row.estado === 'Renegociación') dynStatesTran.valor_renegociacion_nomina += row.valor_negociado;
+                  const forNomina = row.estado + " Nómina";
+                  if(forNomina in dynStatesTran){
+                    dynStatesTran[forNomina] += 1;
+                  }
+                } else {
+                  //console.log("Recaudo " + JSON.stringify(row));
+                  dynStatesTran.recaudo_comercial += 1;
+                  if(row.estado === 'No Concretado') dynStatesTran.valor_no_concretado_recaudo += row.valor_negociado;
+                  else if(row.estado === 'Efectivo') dynStatesTran.valor_efectivo_recaudo += row.valor_aceptado; 
+                  else if(row.estado === 'Negociación') dynStatesTran.valor_negociado_recaudo += row.valor_negociado;
+                  else if(row.estado === 'Aceptado') dynStatesTran.valor_aceptado_recaudo += row.valor_negociado;
+                  else if(row.estado === 'Implementación') dynStatesTran.valor_implementacion_recaudo += row.valor_negociado;
+                  else if(row.estado === 'Renegociación') dynStatesTran.valor_renegociacion_recaudo += row.valor_negociado;
+                  const forRecaudo = row.estado + " Recaudo";
+                  if(forRecaudo in dynStatesTran){
+                    dynStatesTran[forRecaudo] += 1;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        dynStatesTran.total_transaccional = dynStatesTran.nomina_comercial + dynStatesTran.recaudo_comercial;
+
+        //console.log(dynStatesTran);
+
+        for(const state in dynStatesTran){
+          const tempState = document.getElementById(state);
+          if(tempState !== null && tempState !== undefined){
+            if(!state.includes('valor') && !state.includes('total') && !state.includes('comercial')) {
+              const perState = document.getElementById("per " + state);
+              perState.textContent = Number(dynStatesTran[state] / dynStatesTran.total_transaccional * 100).toFixed(2) + "%";
+            }
+            if(state.includes('valor_aceptado') || state.includes('valor_negociado') || state.includes('valor_no_concretado') || state.includes('valor_renegociacion') || state.includes('valor_efectivo') || state.includes('valor_implementacion')) {
+              tempState.textContent = "$" + String(dynStatesTran[state]).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+            } else {
+              tempState.textContent = dynStatesTran[state];
+            }
+          }
+        }
+
+      }
+//----------------------------------------------------------------------------------------------------------------------------------------
+//                                                        Listeners for each select
+//----------------------------------------------------------------------------------------------------------------------------------------
+
+      $('#banca').on("change", function() {
+        filtros.banca = $(this).val().join(" ");
+        //console.log(filtros)
+        actasFilter(actasArr, filtros);
+        nomRecFilter(nomRecArr, filtros);
+        desembolsosFilter(desembolsosArr, filtros);
+        colocacionFilter(colocacionArr, filtros);
+        visitasFilter(visitasArr, filtros);
+        captacionFilter(captacionArr, filtros);
+        sinergiaFilter(sinergiaArr, filtros);
+        transaccionalFilter(transaccionalArr, filtros);
+      })
+      $('#regional').on("change", function() {
+        filtros.regional = $(this).val().join(" ");
+        actasFilter(actasArr, filtros);
+        nomRecFilter(nomRecArr, filtros);
+        desembolsosFilter(desembolsosArr, filtros);
+        colocacionFilter(colocacionArr, filtros);
+        visitasFilter(visitasArr, filtros);
+        captacionFilter(captacionArr, filtros);
+        sinergiaFilter(sinergiaArr, filtros);
+        transaccionalFilter(transaccionalArr, filtros);
+      })
+      $('#lider').on("change", function() {
+        filtros.lider = $(this).val().join(" ");
+        actasFilter(actasArr, filtros);
+        nomRecFilter(nomRecArr, filtros);
+        desembolsosFilter(desembolsosArr, filtros);
+        colocacionFilter(colocacionArr, filtros);
+        visitasFilter(visitasArr, filtros);
+        captacionFilter(captacionArr, filtros);
+        sinergiaFilter(sinergiaArr, filtros);
+        transaccionalFilter(transaccionalArr, filtros);
+      })
+      $('#comercial').on("change", function() {
+        filtros.comercial = $(this).val().join(" ");
+        actasFilter(actasArr, filtros);
+        nomRecFilter(nomRecArr, filtros);
+        desembolsosFilter(desembolsosArr, filtros);
+        colocacionFilter(colocacionArr, filtros);
+        visitasFilter(visitasArr, filtros);
+        captacionFilter(captacionArr, filtros);
+        sinergiaFilter(sinergiaArr, filtros);
+        transaccionalFilter(transaccionalArr, filtros);
+      })
+      $('#cargo').on("change", function() {
+        filtros.cargo = $(this).val().join(" ");
+        actasFilter(actasArr, filtros);
+        nomRecFilter(nomRecArr, filtros);
+        desembolsosFilter(desembolsosArr, filtros);
+        colocacionFilter(colocacionArr, filtros);
+        visitasFilter(visitasArr, filtros);
+        captacionFilter(captacionArr, filtros);
+        sinergiaFilter(sinergiaArr, filtros);
+        transaccionalFilter(transaccionalArr, filtros);
+      })
+      $('#fromDate').on("change", function(){
+        filtros.dateInit = $(this).val();
+        desembolsosFilter(desembolsosArr, filtros);
+        colocacionFilter(colocacionArr, filtros);
+        visitasFilter(visitasArr, filtros);
+        captacionFilter(captacionArr, filtros);
+        sinergiaFilter(sinergiaArr, filtros);
+        transaccionalFilter(transaccionalArr, filtros);
+      });
+      $('#toDate').on("change", function(){
+        filtros.dateEnd = $(this).val();
+        desembolsosFilter(desembolsosArr, filtros);
+        colocacionFilter(colocacionArr, filtros);
+        visitasFilter(visitasArr, filtros);
+        captacionFilter(captacionArr, filtros);
+        sinergiaFilter(sinergiaArr, filtros);
+        transaccionalFilter(transaccionalArr, filtros);
+      });
+
+      $('#clearFilters').on('click', function() {
+        $("#banca, #regional, #cargo, #comercial, #lider,#fromDate, #toDate").val('').trigger('change');
+        filtros.banca = filtros.regional = filtros.comercial = filtros.cargo = filtros.lider = filtros.dateInit = filtros.dateEnd = '';
+
+      });
+
+      //----------------------------------------------------------------------------------------------------------------------------------------
+      //                                                        Listeners for each select
+      //----------------------------------------------------------------------------------------------------------------------------------------
+    
+
+      function forFilters() {
+      const filtroLider = document.getElementById('lider');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach(row => {
+          const opt = document.createElement('option');
+          opt.value = `${row[1]}`;
+          opt.textContent = `${row[1]}`;
+          filtroLider.appendChild(opt);
+        });
+      }).feedLideres();
+
+      const filtroComercial = document.getElementById('comercial');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach(row => {
+          const opt = document.createElement('option');
+          opt.value = `${row[1]}`;
+          opt.textContent = `${row[1]}`;
+          filtroComercial.appendChild(opt);
+        });
+      }).feedComerciales();
+
+      const filtroCargo = document.getElementById('cargo');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach((row, idx) => {
+          const opt = document.createElement('option');
+          opt.value = `${row}`;
+          opt.textContent = `${row}`;
+          filtroCargo.appendChild(opt);
+        });
+      }).feedCargo();
+
+      const filtroRegional = document.getElementById('regional');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach((row, idx) => {
+          const opt = document.createElement('option');
+          opt.value = `${row}`;
+          opt.textContent = `${row}`;
+          filtroRegional.appendChild(opt);
+        });
+      }).feedRegionales();
+    }
+
+    forFilters();
+</script>

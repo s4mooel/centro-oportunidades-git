@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans&amp;display=swap" rel="stylesheet">
+    <?!= include('allStyles'); ?>
+    <style>
+      #sketch {
+        width: 1300px;
+        height: 1000px;
+        display: flex;
+        flex-direction: center;
+      }
+      #filtros-select2 {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      .filtroSelect2{
+        font-family: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="filtros-select2">
+      <select class="filtroSelect2" id="liderSelect" multiple="multiple"></select>
+      <select class="filtroSelect2" id="comercialSelect" multiple="multiple"></select>
+      <select class="filtroSelect2" id="cargoSelect" multiple="multiple"></select>
+      <select class="filtroSelect2" id="regionalSelect" multiple="multiple"></select>
+      <select class="filtroSelect2" id="mesesSelect" multiple="multiple"></select>
+    </div>
+    
+    <div id="sketch"></div>
+    <script>
+
+    $(document).ready(function() {
+      $('.filtroSelect2').select2();
+    });
+
+    function forFilters() {
+      const filtroLider = document.getElementById('liderSelect');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach(row => {
+          const opt = document.createElement('option');
+          opt.value = `${row[1]}`;
+          opt.textContent = `${row[1]}`;
+          filtroLider.appendChild(opt);
+        });
+      }).feedLideres();
+
+      const filtroComercial = document.getElementById('comercialSelect');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach(row => {
+          const opt = document.createElement('option');
+          opt.value = `${row[1]}`;
+          opt.textContent = `${row[1]}`;
+          filtroComercial.appendChild(opt);
+        });
+      }).feedComerciales();
+
+      const filtroCargo = document.getElementById('cargoSelect');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach((row, idx) => {
+          const opt = document.createElement('option');
+          opt.value = `${row}`;
+          opt.textContent = `${row}`;
+          filtroCargo.appendChild(opt);
+        });
+      }).feedCargo();
+
+      const filtroRegional = document.getElementById('regionalSelect');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach((row, idx) => {
+          const opt = document.createElement('option');
+          opt.value = `${row}`;
+          opt.textContent = `${row}`;
+          filtroRegional.appendChild(opt);
+        });
+      }).feedRegionales();
+
+      const filtroMeses = document.getElementById('mesesSelect');
+      google.script.run.withSuccessHandler(function(data){
+        data.forEach((row, idx) => {
+          const opt = document.createElement('option');
+          opt.value = `${row}`;
+          opt.textContent = `${row}`;
+          filtroMeses.appendChild(opt);
+        });
+      }).feedMeses();
+    }
+
+    forFilters();
+      const myCharts = echarts.init(document.getElementById("sketch"));
+
+      function aplicarFiltros() {
+        const filtros = {
+          lider: $('#liderSelect').val(),
+          cargo: $('#cargoSelect').val(),
+          regional: $('#regionalSelect').val(),
+          comercial: $('#comercialSelect').val(),
+          mes: $('#mesesSelect').val()
+        }
+
+        console.log(filtros);
+
+        google.script.run.withSuccessHandler(function(res){
+          const option = {
+            title: {text: "Filtrados"},
+            tooltip: {trigger: "axis"},
+            legend: {data: res.series.map(s => s.name)},
+            xAxis: {type: "category", data: res.categorias},
+            yAxis: {type: "value"},
+            series: res.series
+          };
+          console.log(option.series);
+
+          myCharts.setOption(option, true);
+        }).filtrarYagregar(filtros);
+      }
+
+      $('.filtroSelect2').on('change', aplicarFiltros);
+    </script>
+  </body>
+</html>

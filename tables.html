@@ -1,0 +1,226 @@
+<script>
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+//                                                             Core columns
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+function theColumns(spreadsheet,sheet,fields, states,typeId) {
+
+  let overallColumns = [
+    {
+      title:"ID o NIT Cliente", 
+      field:"nit_cliente", 
+      headerFilter:"input", 
+      headerFilterPlaceholder:"Digite el ID...",
+    },
+    {
+      title:"Nombre", 
+      field:"nombre_cliente", 
+      headerFilter:"input",
+      headerFilterPlaceholder:"Escriba el nombre...",
+      topCalc: "unique",
+      topCalcFormatter: function(cell ){
+        return "Q Clientes: " + cell.getValue();
+      },
+    },
+    {title:typeId, field:typeId, visible: false},
+    {
+      title: typeId === "visita_id" ? "Tipo de visita": "Estado", 
+      field: typeId === "visita_id" ? "tipoVisita": "estado",
+      editor: "list",
+      editorParams: { values: states.map(sta => ({value: sta, label: sta}))},
+      cellEdited: function(cell) {
+        forEditCell.cellEdited(cell,spreadsheet,sheet,fields[0],typeId);
+      },
+      headerFilter:"list", 
+      headerFilterPlaceholder:"Seleccione un estado...",
+      headerFilterParams:{valuesLookup:true, clearable:true},
+      topCalc: "count",
+      topCalcFormatter: function(cell){
+        return "No. Operaciones: " + cell.getValue();
+      }
+    },
+    {
+      title:"Fecha",
+      field:"fecha",
+      headerFilter: GlobalFilters.dateRangeHeaderFilter,
+      headerFilterFunc: GlobalFilters.dateRangeFilterFunc,
+      editor: "date",
+      editorParams: {
+        verticalNavigation: "table",
+        elementAttributes:{
+          title:"slide bar to choose option"
+        }
+      },
+      cellEdited: function(cell) {
+        forEditCell.cellEdited(cell,spreadsheet, sheet, fields[2], typeId);
+      }
+    },
+    {
+      title:"Observaciones",
+      field:"observaciones",
+      editor:"textarea",
+      editorParams:{
+        elementAttributes:{
+            maxlength:"280", //set the maximum character length of the textarea element to 10 characters
+        },
+        selectContents:true,
+        verticalNavigation:"editor", //navigate cursor around text area without leaving the cell
+        shiftEnterSubmit:true,
+      },
+      cellEdited: typeId === "visita_id" ? undefined : function(cell) {
+        forEditCell.cellEdited(cell,spreadsheet, sheet, fields[3], typeId);
+      }
+    },
+    {
+      title:"Acciones",
+      field:"acciones",
+      formatter:function(cell){
+        return '<button class="closeButton">&times Eliminar</button>';
+      },
+      width:90,
+      hozAlign:"center",
+      minWidth: 120,
+      cellClick: function(e,cell){
+        forEditCell.cellClick(e, cell, spreadsheet, sheet,fields[1],typeId)
+      }
+    }
+  ]
+
+  if(typeId === "visita_id") overallColumns.splice(5,1)
+
+  return overallColumns;
+}
+
+function calcAndFormattingField(sheet, field, typeId){
+  const valueAttributtes = {
+    formatter:"money",
+    formatterParams: {
+      decimal:",",
+      thousand:".",
+      symbol: "$",
+      symbolAfter: false,
+    },
+    topCalc:"sum",
+    topCalcFormatter: "money",
+    topCalcFormatterParams: {
+      decimal:",",
+      thousand:".",
+      symbol: "$",
+      symbolAfter: false
+    },
+    hozAlign:"right",
+    editor: forEditCell.editNum,
+    cellEdited: function(cell){
+      forEditCell.cellEdited(cell,spreadsheet, sheet, field, typeId);
+    }
+  }
+  return valueAttributtes
+}
+function tableForLideres(typeId){
+  let leaderColumns = [
+    {
+      title: "Id Líder",
+      field: "lider_legal",
+      headerFilter:"input",
+      headerFilterPlaceholder:"Escriba el documento...",
+      frozen: true,
+    },
+    {
+      title: "Nombre líder",
+      field: "nombre_lider",
+      headerFilter:"input",
+      headerFilterPlaceholder:"Escriba el nombre...",
+      topCalc: "unique",
+      topCalcFormatter: function(cell){
+        return "Q Asesores: " + cell.getValue();
+      },
+      frozen: true,
+    },
+    {
+      title:"Cargo líder",
+      field:"cargo_lider",
+      headerFilter:"list",
+      headerFilterParams: {valuesLookup: true, clearable: true},
+      frozen: true,
+    },
+    {
+      title: "Id Comercial",
+      field: "id_legal",
+      headerFilter:"input",
+      headerFilterPlaceholder:"Escriba el documento...",
+      frozen: true,
+    },
+    {
+      title:"Nombre comercial",
+      field:"nombre_comercial",
+      headerFilter:"input",
+      headerFilterPlaceholder:"Escriba el nombre...",
+      topCalc: "unique",
+      topCalcFormatter: function(cell){
+        return "Q Asesores: " + cell.getValue();
+      },
+      frozen: true,
+    },
+    {
+      title:"Cargo comercial",
+      field:"cargo_comercial",
+      headerFilter:"list",
+      headerFilterParams: {valuesLookup: true, clearable: true},
+      headerFilterPlaceholder:"Seleccione el cargo...",
+      frozen: true,
+    },
+    {
+      title:"ID o NIT Cliente", 
+      field:"nit_cliente", 
+      headerFilter:"input",
+/*       headerFilterFunc: function(headerValue, rowValue, rowData){
+        if("_children" in rowData) {
+          console.log("Has children");
+          return true
+        } else {
+          return String(rowValue ?? "").toLowerCase().includes(String(headerValue).toLowerCase())
+        };
+      }, */ 
+      headerFilterPlaceholder:"Digite el ID...",
+    },
+    {
+      title:"Nombre", 
+      field:"nombre_cliente", 
+      headerFilter:"input",
+/*       headerFilterFunc: function(headerValue, rowValue, rowData){
+        if("_children" in rowData) return true;
+        else return String(rowValue ?? "").toLowerCase().includes(String(headerValue).toLowerCase());
+      },  */
+      headerFilterPlaceholder:"Escriba el nombre...",
+      topCalc: "unique",
+      topCalcFormatter: function(cell){
+        return "Q Clientes: " + cell.getValue();
+      }
+    },
+    {title:typeId, field:typeId, visible: false},
+    {
+      title: typeId === "visita_id" ? "Tipo visita" : "Estado", 
+      field: typeId === "visita_id" ? "tipoVisita" : "estado",
+      headerFilter:"list",
+/*       headerFilterFunc: function(headerValue, rowValue, rowData){
+        if("_children" in rowData) return true;
+        else return String(rowValue ?? "").toLowerCase().includes(String(headerValue).toLowerCase());
+      }, */  
+      headerFilterPlaceholder:"Seleccione un estado...",
+      headerFilterParams:{valuesLookup:true, clearable:true},
+      topCalc : "count",
+      topCalcFormatter: function(cell){
+        return "No. Operaciones: " + cell.getValue();
+      }
+    },
+    {
+      title:"Fecha", 
+      field:"fecha",
+      headerFilter:"list",
+      headerFilter: GlobalFilters.dateRangeHeaderFilter,
+      headerFilterFunc: GlobalFilters.dateRangeFilterFunc
+    },
+  ];
+
+  return leaderColumns;
+}
+</script>

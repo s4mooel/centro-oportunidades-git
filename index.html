@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+    <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.7.2/build/global/luxon.min.js"></script>
+    <?!= include('allStyles'); ?>
+    <?!= include('tables'); ?>
+  </head>
+  <body>
+    <!-- <div style="font-size: 30px">
+      Nuevo link: <a href="https://script.google.com/a/macros/davivienda.com/s/AKfycbxdZs-2tzVReQabncYfw2tStmVr6aVoBeEqtoTR7K2uho8R6B4EVm1kgjzKTurLx7UAfQ/exec">Click aquí</a>
+    </div> -->
+    <nav id="menu">
+      <?let url = getScriptUrl();?>
+      <a class="menu-button" href="<?=url?>?page=index">Informe Gerencial</a>
+      <a class="menu-button" href="<?=url?>?page=gestion">Gestión</a>
+      <a class="menu-button" href="<?=url?>?page=lideres">Líderes</a>
+      <a class="menu-button" href="<?=url?>?page=analista">Data</a>
+      <a class="menu-button" href="<?=url?>?page=acumulado">Base comercial</a>
+      <a class="menu-button" href="<?=url?>?page=registrar-cliente">Cliente nuevo</a>
+    </nav>
+    <div id="title-content">
+      <label> Informe Gerencial </label>
+      <p class="announcement">
+        Cualquier inconsistencia con los datos, repórtela.
+      </p>
+    </div>
+    <div id="filtroANDcontent">
+      
+      <div id="filtroS">
+        <div class="filtroUsar" id="fecha">
+          <label>Desde: <input class="dateRange" id="fromDate" type="date"></label>
+          <label>Hasta: <input class="dateRange" id="toDate" type="date"></label>
+        </div>
+        <select class="filtroUsar" id="banca" multiple>Banca
+          <option value="Pyme">Pyme</option>
+          <option value="Empresarial">Empresarial</option>
+        </select>
+        <select class="filtroUsar" id="regional" multiple>Regional</select>
+        <select class="filtroUsar" id="lider" multiple>Líder</select>
+        <select class="filtroUsar" id="comercial" multiple>Comercial</select>
+        <select class="filtroUsar" id="cargo" multiple>Cargo comercial</select>
+        <button id="clearFilters">Limpiar <br> filtros</button>
+      </div>
+
+      <div id="content">
+        <div id="loader-up">
+          <img src="https://i.gifer.com/ZZ5H.gif" width="70" alt="Cargando...">
+        </div>
+        <div class="col-normal">
+          <div class="title-report">
+            <label>Vinculación</label>
+          </div>
+          <div class="col-report">
+            <div class="title-report">
+              <label>Clientes:</label><div id="totalClientes">###########</div>
+            </div>
+            <div class="row-report">
+              <div>
+                <label>Carterizado </label>
+                <div class="numberResult" id="Base propia"> #####</div>
+                <div class="numberResult" id="percentage_base_propia">%%%</div>
+              </div>
+              <div>
+                <label>Asignado </label>
+                <div class="numberResult" id="Asignado">####</div>
+                <div class="numberResult" id="percentage_asignado">%%%%</div>
+              </div>
+              <div>
+                <label>Nuevos </label>
+                <div class="numberResult" id="Cliente Nuevo">#####</div>
+              </div>
+            </div>
+          </div>
+          <div class="row-normal">
+            <div class="col-report">
+              <div class="title-report">
+                <label>Nomina</label>
+              </div>
+              <div class="row-report">
+                <div>
+                  <div class="numberResult" id="Qnomina">0</div>
+                  <div class="numberResult" id="nomina">%%%%</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-report">
+              <div class="title-report">
+                <label>Recaudo</label>
+              </div>
+              <div class="row-report">
+                <div>
+                  <div class="numberResult" id="Qrecaudo">0</div>
+                  <div class="numberResult" id="recaudo">%%%%</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-report">
+              <div class="title-report">
+                <label>Actas</label><div class="numberResult" id="totalActas">#####</div>
+              </div>
+              <div class="row-report">
+                <div>
+                  <label>Vigente</label>
+                  <div class="numberResult" id="Vigente">####</div>
+                  <div class="numberResult" id="per_vigente">%%%</div>
+                </div>
+                <div>
+                  <label>Pronta a vencer</label>
+                  <div class="numberResult" id="Pronta a vencer">####</div>
+                  <div class="numberResult" id="per_pronta">%%%</div>
+                </div>
+                <div>
+                  <label >Vencida</label>
+                  <div class="numberResult" id="Vencida">####</div>
+                  <div class="numberResult" id="per_vencida">%%%</div>
+                </div>
+                <div>
+                  <label >Sin acta</label>
+                  <div class="numberResult" id="Sin acta">####</div>
+                  <div class="numberResult" id="per_sin_acta">%%%</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-report">
+              <div class="title-report">
+                <label>Cupos</label>
+              </div>
+              <div class="row-report">
+                <div>
+                  <label>Cupo Solicitado</label>
+                  <div class="numberResult" id="cupoSolicitado">$$$$$</div>
+                </div>
+                <div>
+                  <label>Cupo Aprobado</label>
+                  <div class="numberResult" id="cupoAprobado">$$$$$</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br>
+        <div class="col-normal">
+          <div class="title-report">
+            <label>Gestión</label>
+          </div>
+          <!--                           
+            Visitas                                 
+            -->
+          <div class="col-report">
+            <div class="title-report">
+              <label>Visitas:</label> <div class="numberResult" id="totalVisitas">#####</div>
+            </div>
+            <div class="row-report">
+              <div>
+                <label>Presencial</label>
+                <div class="numberResult" id="Presencial">####</div>
+                <div class="numberResult" id="per_presencial">%%%</div>
+              </div>
+              <div>
+                <label>Meet</label>
+                <div class="numberResult" id="Meet">####</div>
+                <div class="numberResult" id="per_meet">%%%</div>
+              </div>
+              <div>
+                <label>Per cápita</label>
+                <div class="numberResult" id="visitas_per">####</div>
+              </div>
+            </div>
+          </div>
+          <!--                           
+            Cupos de crédito                                 
+            -->
+          <div class="col-report">
+            <div class="title-report">
+              <label>Cupos de crédito:</label><div class="numberResult" id="total_cupos">###</div>
+            </div>
+            <div class="row-report">
+              <div>
+                <label>Aprobado</label>
+                <div class="numberResult" id="Aprobado">0</div>
+                <div class="numberResult" id="per Aprobado">0</div>
+              </div>
+              <div>
+                <label>Radicación</label>
+                <div class="numberResult" id="Radicación">0</div>
+                <div class="numberResult" id="per Radicación">0</div>
+              </div>
+              <div>
+                <label>Recolección de documentos</label>
+                <div class="numberResult" id="Recolección de documentos">0</div>
+                <div class="numberResult" id="per Recolección de documentos">0</div>
+              </div>
+              <div>
+                <label>Cliente no gestionable</label>
+                <div class="numberResult" id="Cliente no gestionable">0</div>
+                <div class="numberResult" id="per Cliente no gestionable">0</div>
+              </div>
+              <div>
+                <label>Devolución</label>
+                <div class="numberResult" id="Devolución">0</div>
+                <div class="numberResult" id="per Devolución">0</div>
+              </div>
+              <div>
+                <label>Prospecto</label>
+                <div class="numberResult" id="Prospecto">0</div>
+                <div class="numberResult" id="per Prospecto">0</div>
+              </div>
+              <div>
+                <label>Negado perfilador</label>
+                <div class="numberResult" id="Negado perfilador">0</div>
+                <div class="numberResult" id="per Negado perfilador">0</div>
+              </div>
+              <div>
+                <label>Negado crédito</label>
+                <div class="numberResult" id="Negado crédito">0</div>
+                <div class="numberResult" id="per Negado crédito">0</div>
+              </div>
+            </div>
+          </div>
+          <!--                           
+            Desembolsos                                 
+            -->
+          <div class="col-report">
+            <div class="title-report">
+              <label>Desembolsos:</label> <div class="numberResult" id="total_desembolsos">####</div>
+            </div>
+            <div class="row-report">
+              <div>
+                <label>Proyectado</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="Proyectado">0</div>
+                  <div class="numberResult" id="per Proyectado">$0</div>
+                </div>
+                <div class="numberResult" id="valor_proyectado">$0</div>
+              </div>
+              <div>
+                <label>Desembolsado</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="Desembolsado">0</div>
+                  <div class="numberResult" id="per Desembolsado">0</div>
+                </div>
+                <div class="numberResult" id="valor_desembolsado">$0</div>
+              </div>
+              <div>
+                <label>No Concretado</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="No Concretado">0</div>
+                  <div class="numberResult" id="per No Concretado">0</div>
+                </div>
+                <div class="numberResult" id="valor_no_concretado">0</div>
+              </div>
+            </div>
+            <div class="row-report">
+              <div>
+                <label>Meta (M)</label>
+                <div class="numberResult" id="metas">$$$$</div>
+              </div>
+              <div>
+                <label>Amortización (A)</label>
+                <div class="numberResult" id="vencimientos">$$$$</div>
+              </div>
+              <div>
+                <label>M + A</label>
+                <div class="numberResult" id="mPLUSv">$$$$</div>
+              </div>
+              <div>
+                <label>Termómetro</label>
+                <div class="numberResult" id="medidor">$$$$</div>
+              </div>
+            </div>
+          </div>
+          <!--                           
+            Captación
+            -->
+          <div class="col-report">
+            <div class="title-report">
+              <label>Captación</label><div class="numberResult" id="total_captacion Captación">#####</div>
+            </div>
+            <div class="row-report">
+              <div>
+                <label>Negociación</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="Negociación Captación">0</div>
+                  <div class="numberResult" id="per Negociación Captación">0</div>
+                </div>
+                <div class="numberResult" id="valor_negociado Captación">$0</div>
+              </div>
+              <div>
+                <label>Renegociación</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="Renegociación Captación">0</div>
+                  <div class="numberResult" id="per Renegociación Captación">0</div>
+                </div>
+                <div class="numberResult" id="valor_renegociacion Captación">$0</div>
+              </div>
+              <div>
+                <label>Aceptado</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="Aceptado Captación">0</div>
+                  <div class="numberResult" id="per Aceptado Captación">0</div>
+                </div>
+                <div class="numberResult" id="valor_aceptado Captación">$0</div>
+              </div>
+              <div>
+                <label>No Concretado</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="No Concretado Captación">0</div>
+                  <div class="numberResult" id="per No Concretado Captación">0</div>
+                </div>
+                <div class="numberResult" id="valor_no_concretado Captación">0</div>
+              </div>
+            </div>
+          </div>
+          <!--                           
+            Sinergía
+            -->
+          <div class="col-report">
+            <div class="title-report">
+              <label>Sinergía</label><div class="numberResult" id="total_sinergia Sinergía">####</div>
+            </div>
+            <div class="row-report">
+              <div>
+                <label>Negociación</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="Negociación Sinergía"></div>
+                  <div class="numberResult" id="per Negociación Sinergía"></div>
+                </div>
+                <div class="numberResult" id="valor_negociado Sinergía">$$$$</div>
+              </div>
+              <div>
+                <label>Recaudado</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="Recaudado Sinergía">####</div>
+                  <div class="numberResult" id="per Recaudado Sinergía">####</div>
+                </div>
+                <div class="numberResult" id="valor_recaudado Sinergía">$$$$</div>
+              </div>
+              <div>
+                <label>Aceptado</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="Aceptado Sinergía"></div>
+                  <div class="numberResult" id="per Aceptado Sinergía"></div>
+                </div>
+                <div class="numberResult" id="valor_aceptado Sinergía">$$$$</div>
+              </div>
+              <div>
+                <label>No Concretado</label>
+                <div class="row-normal">
+                  <div class="numberResult" id="No Concretado Sinergía">####</div>
+                  <div class="numberResult" id="per No Concretado Sinergía">####</div>
+                </div>
+                <div class="numberResult" id="valor_no_concretado Sinergía">$$$$</div>
+              </div>
+            </div>
+          </div>
+          <!--                           
+            Transaccional
+            -->
+          <div class="col-normal">
+            <div class="title-report">
+              <label>Transaccional</label><div class="numberResult" id="total_transaccional">#####</div>
+            </div>
+            <div class="row-normal">
+              <div class="col-report">
+                <div class="title-report">
+                  <label>Nómina:</label><div class="numberResult" id="nomina_comercial">###</div>
+                </div>
+                <div class="row-report">
+                  <div>
+                    <label>Negociación</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Negociación Nómina"></div>
+                      <div class="numberResult" id="per Negociación Nómina"></div>
+                    </div>
+                    <div class="numberResult" id="valor_negociado_nomina">$$$$</div>
+                  </div>
+                  <div>
+                    <label>Renegociación</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Renegociación Nómina"></div>
+                      <div class="numberResult" id="per Renegociación Nómina"></div>
+                    </div>
+                    <div class="numberResult" id="valor_renegociacion_nomina">$$$$</div>
+                  </div>
+                  <div>
+                    <label>No Concretado</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="No Concretado Nómina">####</div>
+                      <div class="numberResult" id="per No Concretado Nómina">####</div>
+                    </div>
+                    <div class="numberResult" id="valor_no_concretado_nomina">$$$$</div>
+                  </div>
+                </div>
+                <div class="row-report">
+                  <div>
+                    <label>Aceptado</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Aceptado Nómina"></div>
+                      <div class="numberResult" id="per Aceptado Nómina"></div>
+                    </div>
+                    <div class="numberResult" id="valor_aceptado_nomina">$$$$</div>
+                  </div>
+                  <div>
+                    <label>Implementación</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Implementación Nómina"></div>
+                      <div class="numberResult" id="per Implementación Nómina"></div>
+                    </div>
+                    <div class="numberResult" id="valor_implementacion_nomina">$$$$</div>
+                  </div>
+                  <div>
+                    <label>Efectivo</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Efectivo Nómina"></div>
+                      <div class="numberResult" id="per Efectivo Nómina"></div>
+                    </div>
+                    <div class="numberResult" id="valor_efectivo_nomina">$$$$</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-report">
+                <div class="title-report">
+                  <label>Recaudo:</label><div class="numberResult" id="recaudo_comercial">###</div>
+                </div>
+                <div class="row-report">
+                  <div>
+                    <label>Negociación</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Negociación Recaudo"></div>
+                      <div class="numberResult" id="per Negociación Recaudo"></div>
+                    </div>
+                    <div class="numberResult" id="valor_negociado_recaudo">$$$$</div>
+                  </div>
+                  <div>
+                    <label>Renegociación</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Renegociación Recaudo"></div>
+                      <div class="numberResult" id="per Renegociación Recaudo"></div>
+                    </div>
+                    <div class="numberResult" id="valor_renegociacion_recaudo">$$$$</div>
+                  </div>
+                  <div>
+                    <label>No Concretado</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="No Concretado Recaudo">####</div>
+                      <div class="numberResult" id="per No Concretado Recaudo">####</div>
+                    </div>
+                    <div class="numberResult" id="valor_no_concretado_recaudo">$$$$</div>
+                  </div>
+                </div>
+                <div class="row-report">
+                  <div>
+                    <label>Aceptado</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Aceptado Recaudo"></div>
+                      <div class="numberResult" id="per Aceptado Recaudo"></div>
+                    </div>
+                    <div class="numberResult" id="valor_aceptado_recaudo">$$$$</div>
+                  </div>
+                  <div>
+                    <label>Implementación</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Implementación Recaudo"></div>
+                      <div class="numberResult" id="per Implementación Recaudo"></div>
+                    </div>
+                    <div class="numberResult" id="valor_implementacion_recaudo">$$$$</div>
+                  </div>
+                  <div>
+                    <label>Efectivo</label>
+                    <div class="row-normal">
+                      <div class="numberResult" id="Efectivo Recaudo"></div>
+                      <div class="numberResult" id="per Efectivo Recaudo"></div>
+                    </div>
+                    <div class="numberResult" id="valor_efectivo_recaudo">$$$$</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>    
+    </div>
+    <?!= include('managementReport.js')?>
+  </body>
+</html>

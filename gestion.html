@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans&amp;display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+    <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.7.2/build/global/luxon.min.js"></script>
+    <?!= include('functions'); ?>
+    <?!= include('tables'); ?>
+    <?!= include('allStyles'); ?>
+  </head>
+  <body>
+    <nav id="menu">
+      <?let url = getScriptUrl();?>
+      <a class="menu-button" href="<?=url?>?page=index">Informe Gerencial</a>
+      <a class="menu-button" href="<?=url?>?page=gestion">Gestión</a>
+      <a class="menu-button" href="<?=url?>?page=acumulado">Base comercial</a>
+      <a class="menu-button" href="<?=url?>?page=registrar-cliente">Cliente nuevo</a>
+    </nav>
+    <div id="title-content">
+      Consulta y actualización de gestión
+      <br>
+      <div class="announcement">
+        Si hay fallos en la edición, entrar al siguiente link: <a href="https://script.google.com/a/macros/davivienda.com/s/AKfycbxdZs-2tzVReQabncYfw2tStmVr6aVoBeEqtoTR7K2uho8R6B4EVm1kgjzKTurLx7UAfQ/exec?page=gestion">Click aquí</a>
+      </div>
+    </div>
+    <div id="content_active">
+      <div id="select-reemplazo">
+        <label> </label><br>
+        <select id="reemplazo">
+          <option value="" disabled selected>Comercial a reemplazar</option>
+        </select>
+        <p id="msg-reemplazo"></p>
+      </div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Formulario ------------------------------------------------>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="formGestion" role="button" tabindex="0" aria-expanded="false">
+        <div>Gestionar</div> 
+        <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div class="hidden" id="formGestion">
+        <div class="checkbox-select">
+          <h3>Gestionar</h3>
+          <label> Cliente <label><br>
+          <!-- <input type="text" id="cliente" list="clientes" placeholder="Escribe NIT o nombre..." required> -->
+          <select id="cliente">
+            <option value="" selected disabled></option>
+          </select>
+          <p id="mensaje-cliente"></p>
+          <div id="loader-up">
+            <p id="loadingClientes">Cargando clientes...</p>
+            <img src="https://i.gifer.com/ZZ5H.gif" width="40" alt="Cargando...">
+          </div>
+          <!-- <datalist id="clientes"></datalist> -->
+          <div class="dropdown" data-target="hidden-menu" role="button" tabindex="0" aria-expanded="false">
+            <div>Seleccione la gestión</div>
+            <div class="dropdown-arrow">&#129171</div>
+          </div>
+          <div class="hidden" id="hidden-menu">
+            <div id="menu-form">
+              <div class="ording-menu"> <!---   <---        Div para ordenar                --->
+              <!-- _________________________________________ Visitas _____________________________________________ -->
+              <div class="paraGestionar" id="gestionVisita">
+                <label><input id="inVis" type="checkbox">Visita</label>
+                <div class="hidden prodVis" id="estadosVis">
+                  <label>Tipo de Visita</label><br>
+                  <select class="prodVis" id="tipoVisita" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="Presencial">Presencial</option>
+                    <option value="Meet">Meet</option>
+                  </select>
+                </div>
+                <div class="hidden prodVis" id="fechaVis">
+                  <label>Fecha de la visita</label><br>
+                  <input class="prodVis" type="date" id="fecha_visita" required>
+                </div>
+                <div class="hidden prodVis" id="compVis">
+                  <label for="compromiso">Compromiso</label><br>
+                  <textarea class="prodVis" id="compromiso" placeholder="Ej: Nos comprometemos a..." rows="4"></textarea>
+                </div>
+                <div class="hidden prodVis" id="acompVis">
+                  <label for="acompaniamiento">Acompañamiento (opcional)</label><br>
+                  <select class="prodVis opcional" id="acompaniamiento" required>
+                    <option value="">-- Ninguno --</option>
+                    <option value="Cash">Cash</option>
+                    <option value="UAP">UAP</option>
+                    <option value="Lider">Lider</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+              </div>
+              <!-- _________________________________________ Colocacion _____________________________________________ -->
+              <div class="paraGestionar" id="gestionColocacion">
+                <label><input id="inCol" type="checkbox">Cupos de Crédito</label>
+                <div class="hidden prodCol" id="estadoColocacion">
+                  <!-- Dropdown estados -->
+                  <label>Estado</label><br>
+                  <select class="prodCol" id="estadoCol">
+                    <option value="" disabled selected hidden>-- Por gestionar --</option>
+                    <option value="Radicación">Radicación</option>
+                    <option value="Recolección de documentos">Recolección de documentos</option>
+                    <option value="Aprobado">Aprobado</option>
+                    <option value="Cliente no gestionable">Cliente no gestionable</option>
+                    <option value="Devolución">Devolución</option>
+                    <option value="Prospecto">Prospecto</option>
+                    <option value="Negado perfilador">Negado perfilador</option>
+                    <option value="Negado crédito">Negado crédito</option>
+                  </select><br>
+                </div>
+                <div class="hidden prodCol" id="divNoGestionable">
+                  <label>Motivo de no gestionable</label><br>
+                  <select class="prodCol opcional" id="noGestionable">
+                    <option value="">Opcional, elegir un motivo...</option>
+                  </select>
+                </div>
+                <div class="hidden prodCol" id="divEstructurador">
+                  <!-- Estructurador -->
+                  <label>¿Requiere estructurador?</label><br>
+                  <select class="prodCol" id="estructurador">
+                    <option value="No" selected>No</option>
+                    <option value="Si">Si</option>
+                  </select>
+                </div>
+                <div class="hidden prodCol" id="divValorCol">
+                  <!-- Valor solicitado -->
+                  <label>Valor de cupo solicitado</label><br>
+                  <input class="prodCol formatNum" id="valorCol" type="text" placeholder="Poner el valor completo">
+                </div>
+                <div class="hidden prodCol" id="observacionesCol">
+                  <!-- Observaciones -->
+                  <label>Observaciones</label><br>
+                  <textarea class="opcional prodCol" rows="4" name="Observaciones"></textarea>
+                </div>
+              </div>
+              <!-- _________________________________________ Desembolsos _____________________________________________ -->
+              <div class="paraGestionar" id="gestionDesembolso">
+                <label><input id="inDesem" type="checkbox">Desembolso</label>
+                <div class="hidden prodDesem" id="estadosDesem">
+                  <label>Estado</label><br>
+                  <select class="prodDesem" id="estadoDesem" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="Desembolsado">Desembolsado</option>
+                    <option value="Proyectado">Proyectado</option>
+                    <option value="No Concretado">No Concretado</option>
+                  </select>
+                </div>
+                <div class="hidden prodDesem" id="desistenciaDiv">
+                  <label>Motivo por el que desiste</label><br>
+                  <select class="prodDesem opcional" placeholder="Opcional..." type="text" id="desistencia">
+                    <option value="">Seleccione una opción si quiere o complete en la sección de observaciones</option>
+                  </select>
+                </div>
+                <div class="hidden prodDesem" id="divValDesem">
+                  <label>Valor del Desembolso</label><br>
+                  <input placeholder="Poner el valor completo" class="formatNum prodDesem" type="text" id="valorDesem" required>
+                </div>
+                <div class="hidden prodDesem" id="fechaDesem">
+                  <label>Fecha de Proyección</label><br>
+                  <input class="prodDesem" type="date" id="fecha_proyeccion" required>
+                </div>
+                <div class="hidden prodDesem" id="divLinea">
+                  <label>Línea</label><br>
+                  <select class="prodDesem" id="lineaDesem">
+                    <option value="" disabled selected>Selecione una línea de trabajo</option>
+                    <option value="Capital de trabajo (CP/LP)">Capital de trabajo (CP/LP)</option>
+                    <option value="UAP">UAP</option>
+                    <option value="Moneda extranjera">Moneda extranjera</option>
+                    <option value="Agropecuario">Agropecuario</option>
+                  </select>
+                </div>
+                <div class="hidden prodDesem" id="observacionesDesem">
+                  <label>Observaciones</label><br>
+                  <textarea class="opcional prodDesem" id="observacionesDesem" rows="4"></textarea>
+                </div>
+              </div>
+              </div> <!---     <---      Div para ordenar                --->
+              <div class="ording-menu"> <!---     <---      Div para ordenar                --->
+              <!-- _________________________________________ Captacion _____________________________________________ -->
+              <div class="paraGestionar" id="gestionCaptacion">
+                <label><input id="inCap" type="checkbox">Captación</label>
+                <div class="hidden" id="productoCaptacion">
+                  <!-- Dropdown productos -->
+                    <label>Selecione los productos</label>
+                    <div class="prodCap"><input type="checkbox" value="CDT">CDT<br></div>
+                    <div class="prodCap"><input type="checkbox" value="Cuenta corriente">Cuenta corriente<br></div>
+                    <div class="prodCap"><input type="checkbox" value="Cuenta de ahorros">Cuenta de ahorros<br></div>
+                    <div class="prodCap"><input type="checkbox" value="Fondos">Fondos<br></div>
+                    <div class="prodCap"><input type="checkbox" value="Cuenta de compensación">Cuenta de compensación<br></div>
+                </div>
+              </div>
+              <!-- _________________________________________ Transaccional _____________________________________________ -->
+              <div class="paraGestionar" id="gestionTransaccional">
+                <label><input id="inTran" type="checkbox">Transaccional</label>
+
+                <div class="hidden" id="productoTransaccional">
+                  <!-- Dropdown productos -->
+                    <label>Seleccione los productos</label>
+                    <div class="prodTran"><input type="checkbox" value="Adquirencia">Adquirencia</div>
+                    <div class="prodTran"><input type="checkbox" value="Bases de Datos Externa">Bases de Datos Externa</div>
+                    <div class="prodTran"><input type="checkbox" value="Boton PSE">Boton PSE</div>
+                    <div class="prodTran"><input type="checkbox" value="Nomina">Nomina</div>
+                    <div class="prodTran"><input type="checkbox" value="Pagos Especiales">Pagos Especiales</div>
+                    <div class="prodTran"><input type="checkbox" value="Pasarela">Pasarela</div>
+                    <div class="prodTran"><input type="checkbox" value="QR Interoperable">QR Interoperable</div>
+                    <div class="prodTran"><input type="checkbox" value="Recaudo Código de barras">Recaudo Código de barras</div>
+                    <div class="prodTran"><input type="checkbox" value="Recaudo DNR">Recaudo DNR</div>
+                    <div class="prodTran"><input type="checkbox" value="Tarjetas Pagos">Tarjetas Pagos</div>
+                </div>
+              </div>
+              <!-- _________________________________________ Seguros _____________________________________________ -->
+              <div class="paraGestionar" id="gestionSinergia">
+                <label><input id="inSeg" type="checkbox">Sinergía</label>
+                <div class="hidden prodSeg" id="estadoSeg">
+                  <label>Estado</label><br>
+                  <select class="prodSeg" id="estadoSeg" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="Negociación">Negociación</option>
+                    <option value="Recaudado">Recaudado</option>
+                    <option value="Aceptado">Aceptado</option>
+                    <option value="No Concretado">No Concretado</option>
+                  </select>
+                </div>
+                <div class="hidden prodSeg" id="RNI">
+                  <label>Motivo de no interés</label><br>
+                  <textarea class="prodSeg opcional" rows="4" id="razonNoInteres"></textarea>
+                </div>
+                <div class="hidden prodSeg" id="productoSeg">
+                  <label>Producto de seguro</label><br>
+                  <select class="prodSeg" id="seguro" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="Tranquilidad">Tranquilidad</option>
+                    <option value="Vida Grupo">Vida Grupo</option>
+                    <option value="Ciberseguridad">Ciberseguridad</option>
+                    <option value="ARL">ARL</option>
+                    <option value="Jelpit">Jelpit</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+                <div class="hidden prodSeg" id="MN">
+                  <label>Monto Negociado</label><br>
+                  <input class="formatNum prodSeg opcional" placeholder="Poner el valor completo" type="text" id="monto_negociado" required>
+                </div>
+                <div class="hidden prodSeg" id="MA">
+                  <label>Monto Aceptado</label><br>
+                  <input class="formatNum prodSeg opcional" placeholder="Poner el valor completo" type="text" id="monto_aceptado" required>
+                </div>
+                <div class="hidden prodSeg">
+                  <label>Observaciones</label><br>
+                  <textarea class="prodSeg opcional" id="observacionesSeg" rows="4"></textarea>
+                </div>
+              </div>
+              </div> <!---     <---      Div para ordenar                --->
+            </div> 
+            <!-- _________________________________________ Botón para gestionar _____________________________________________ -->
+            <div>
+              <button class="btn btn-submit" id="btnSubmit">Registrar</button>
+            </div>
+              <div id="loader-down">
+                <img src="https://i.gifer.com/ZZ5H.gif" width="40" alt="Cargando...">
+              </div>
+              <p id="mensaje"></p>
+          </div>
+        </div>
+      </div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Visitas ---------------------------------------------------->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="tabla-visitas" role="button" tabindex="0" aria-expanded="false">
+      <label>Visitas</label> 
+      <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div id="tabla-visitas" class="hidden"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Colocación ------------------------------------------------->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="colocacion" role="button" tabindex="0" aria-expanded="false">
+        <div>Cupos de Crédito</div> 
+        <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div class="hidden" id="colocacion"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Desembolsos ------------------------------------------------>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="tabla-desembolsos" role="button" tabindex="0" aria-expanded="false">
+      <label>Desembolsos</label> 
+      <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div id="tabla-desembolsos" class="hidden"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Captación ------------------------------------------------->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="captacion" role="button" tabindex="0" aria-expanded="false">
+        <div>Captación</div> 
+        <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div class="hidden" id="captacion"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Transaccional ------------------------------------------------>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="transaccional" role="button" tabindex="0" aria-expanded="false">
+        <div>Transaccional</div> 
+        <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div class="hidden" id="transaccional"></div>
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <!--------------------------------------------------------- Seguros ------------------------------------------------->
+      <!---------------------------------------------------------------------------------------------------------------------->
+      <div class="dropdown" data-target="tabla-seguros" role="button" tabindex="0" aria-expanded="false">
+      <label>Sinergía</label> 
+      <div class="dropdown-arrow">&#129171</div>
+      </div>
+      <div id="tabla-seguros" class="hidden"></div>
+    </div>
+    <?!= include('gestion.js'); ?>
+  </body>
+</html>

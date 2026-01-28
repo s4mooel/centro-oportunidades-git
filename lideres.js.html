@@ -1,0 +1,1185 @@
+<script>
+//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------- Open and close for forms ----------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
+      function toggleDisplay(trigger, targetId) {
+        const target = document.getElementById(targetId);
+        if(!target) return;
+
+        const isHidden = target.classList.toggle("hidden");
+        trigger.setAttribute("aria-expanded", String(!isHidden));
+      }
+
+      document.querySelectorAll('.dropdown').forEach(cuadro => {
+        const targetId = cuadro.dataset.target;
+        cuadro.addEventListener("click", () => toggleDisplay(cuadro, targetId));
+      })
+//-----------------------------------------------------------------------------------------------------------------------
+//--------------------------                    Arrays by bolsa             ---------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
+let visitas = {
+  totalVisitas : 0,
+};
+let cupos = {
+  'Radicación': 0,
+  'Aprobado': 0,
+};
+let desembolsos = {
+  qProyectado: 0,
+  proyectado: 0,
+  qDesembolsado: 0,
+  desembolsado: 0,
+};
+let captacion = {
+  qNegociacion: 0,
+  negociacion: 0,
+  qAceptado: 0,
+  aceptado: 0,
+};
+let sinergia = {
+  qNegociacion: 0,
+  negociacion: 0,
+  qRecaudado: 0,
+  recaudado: 0,
+};
+let nomina = {
+  qNegociacion: 0,
+  negociacion: 0,
+  qEfectivo: 0,
+  efectivo: 0,
+};
+let recaudo = {
+  qNegociacion: 0,
+  negociacion: 0,
+  qEfectivo: 0,
+  efectivo: 0,
+};
+
+const loaderUp = document.getElementById('loader-up');
+loaderUp.style.display = 'block';
+
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla desembolsos            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos
+        let columnsDesem = tableForLideres("desembolso_id");
+        columnsDesem.splice(0,3);
+        columnsDesem.splice(7,0,
+          {
+            title:"Valor desembolsado",
+            field:"valor_desembolso",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title: "Línea de trabajo",
+            field: "linea",
+            headerFilter: "list",
+            headerFilterPlaceholder: "Seleccione...",
+            headerFilterParams: {valuesLookup: true, clearable: true}
+          },
+          {
+            title:"Desistencia",
+            field:"noGestionable",
+            headerFilter: "list",
+            headerFilterPlaceholder: "Seleccione...",
+            headerFilterParams: {valuesLookup: true, clearable: true}
+          },
+          {title:"Observaciones", field:"observaciones"}
+        );
+        let tableDesembolsos = new Tabulator("#tabla-desembolsos", {
+          
+          height:"400px",
+          index: "desembolso_id",
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          columns: columnsDesem
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const uncryp = JSON.parse(data);
+        const mapRegisters = uncryp.map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        tableDesembolsos.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataLeader("dataDesembolsos");; // aquí se llama la función de GAS
+      console.log(tableDesembolsos);
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla visitas            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos
+      let columnsVisit = tableForLideres("visita_id");
+      columnsVisit.splice(0,3);
+      columnsVisit.splice(7,0,
+        {title:"Compromiso", field:"compromiso", hozAlign:"left"},
+        {
+          title:"Acompañamiento",
+          field:"acompaniamiento",
+          headerFilter: "list",
+          headerFilterPlaceholder:"Seleccione un estado...",
+          headerFilterParams:{valuesLookup:true, clearable:true}
+        }
+      );
+        let tableVisitas = new Tabulator("#tabla-visitas", {
+          height:"400px",
+          index: "visita_id",
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          columns: columnsVisit
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const uncryp = JSON.parse(data);
+        const mapRegisters = uncryp.map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        tableVisitas.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataLeader("dataVisitas"); // aquí se llama la función de GAS
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla seguros            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos
+        let columnsSeguros = tableForLideres("seguro_id");
+        columnsSeguros.splice(0,3)
+        columnsSeguros.splice(7,0,
+          {title:"Producto", field:"seguro", hozAlign:"right"},
+          {
+            title:"Valor Negociado",
+            field:"valor_negociado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title:"Valor Efectivo",
+            field:"valor_aceptado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {title:"Observaciones", field:"observaciones"}
+        );
+        let tableSeguros = new Tabulator("#tabla-seguros", {
+          
+          height:"400px",
+          index: "seguro_id",
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          columns: columnsSeguros
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const uncryp = JSON.parse(data);
+        const mapRegisters = uncryp.map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        tableSeguros.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataLeader("dataSeguros"); // aquí se llama la función de GAS
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla Colocación            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+        let columnsColocacion = tableForLideres("colocacion_id");
+        columnsColocacion.splice(0,3);
+        columnsColocacion.splice(7,0,
+          {
+            title: "Cupo solicitado",
+            field: "valor_solicitado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title: "Motivo no gestionable",
+            field: "noGestionable",
+            headerFilter: "list",
+            headerFilterParams: {valuesLookup: true, clearable: true}
+          },
+          {
+            title:"¿Requiere estructurador?",
+            field:"estructurador",
+            headerFilter:"list",
+            headerFilterPlaceholder:"Seleccione un estado...",
+            headerFilterParams:{valuesLookup:true, clearable: true}
+          },
+          {title: "Observaciones", field:"observaciones"}
+        );
+        let colocacionTable = new Tabulator("#colocacion", {
+          //data: data,
+          height:"400px",
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          index: "colocacion_id",
+          columns: columnsColocacion
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const uncryp = JSON.parse(data);
+        const mapRegisters = uncryp.map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        colocacionTable.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataLeader("dataColocacion");
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla Captación           -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+        let columnsCaptacion = tableForLideres("captacion_id");
+        columnsCaptacion.splice(0,3);
+        columnsCaptacion.splice(7,0,
+          {
+            title:"Producto", 
+            field:"producto",
+            headerFilter:"list",
+            headerFilterPlaceholder:"Seleccione...",
+            headerFilterParams:{valuesLookup:true, clearable: true}
+          },
+          {
+            title:"Valor Negociado",
+            field:"valor_negociado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title:"Valor Efectivo",
+            field:"valor_aceptado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {title:"Razon desiste", field:"desiste"},
+          {title:"Observaciones", field:"observaciones"}  
+        );
+        let captacionTable = new Tabulator("#captacion", {
+          height:"400px",
+          index: "captacion_id",
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          columns : columnsCaptacion
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const uncryp = JSON.parse(data);
+        const mapRegisters = uncryp.map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        captacionTable.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataLeader("dataCaptacion");
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla Transaccional           -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+        let columnsTransaccional = tableForLideres("transaccional_id");
+        columnsTransaccional.splice(0,3);
+        columnsTransaccional.splice(7,0,
+          {
+            title:"Producto", 
+            field:"producto",
+            headerFilter:"list",
+            headerFilterPlaceholder:"Seleccione...",
+            headerFilterParams:{valuesLookup:true, clearable: true}
+          },
+          {
+            title:"Valor Negociado",
+            field:"valor_negociado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {
+            title:"Valor Efectivo",
+            field:"valor_aceptado",
+            hozAlign:"right",
+            formatter:"money",
+            formatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false,
+            },
+            topCalc:"sum",
+            topCalcFormatter: "money",
+            topCalcFormatterParams: {
+              decimal:",",
+              thousand:".",
+              symbol: "$",
+              symbolAfter: false
+            },
+          },
+          {title:"Razon desiste", field:"desiste"},
+          {title:"Observaciones", field:"observaciones"}
+        );
+        let transaccionalTable = new Tabulator("#transaccional", {
+          //data: data,
+          height:"400px",
+          index: "transaccional_id",
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          columns: columnsTransaccional
+        });
+      google.script.run.withSuccessHandler(function(data) {
+        const uncryp = JSON.parse(data);
+        const mapRegisters = uncryp.map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        transaccionalTable.setData(JSON.stringify(mapRegisters));
+      }).getSheetDataLeader("dataTransaccional");
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla Reemplazo           -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+
+        let comerciales = [];
+        let columnsReemplazo = tableForLideres("comercial_id")
+        columnsReemplazo.splice(0,3);
+        columnsReemplazo.splice(3,2);
+        columnsReemplazo.splice(4,2);
+        columnsReemplazo.splice(columnsReemplazo.length-1,0,
+        {
+          title: "Reemplazar a",
+          field: "nombre_reemplazo",
+          //editor: forEditCell.editReplacement,
+          editor: "list",
+          editorParams: {
+            autocomplete: true,
+            allowEmpty:true,
+            listOnEmpty:true,
+            valuesLookup: true,
+            valuesLookupField: "nombre_comercial",
+          },
+          cellEdited: function(cell){
+            forEditCell.cellEdited(cell,"base_usuarios","comerciales","id_reemplazo","comercial_id")
+          }
+        },
+        {
+          title: "Fecha de inicio",
+          field: "dateInit",
+          headerFilter: GlobalFilters.dateRangeHeaderFilter,
+          headerFilterFunc: GlobalFilters.dateRangeFilterFunc,
+          editor: "datetime",
+          editorParams: {
+            verticalNavigation: "table",
+            elementAttributes:{
+              title:"slide bar to choose option"
+            }
+          },
+          cellEdited: function(cell){
+            forEditCell.cellEdited(cell,"base_usuarios","comerciales","first_day","comercial_id")
+          }
+        },
+        {
+          title: "Fecha final",
+          field: "dateEnd",
+          headerFilter: GlobalFilters.dateRangeHeaderFilter,
+          headerFilterFunc: GlobalFilters.dateRangeFilterFunc,
+          editor: "datetime",
+          editorParams: { 
+            verticalNavigation: "table",
+            elementAttributes:{
+              title:"slide bar to choose option"
+            }
+          },
+          cellEdited: function(cell){
+            forEditCell.cellEdited(cell,"base_usuarios","comerciales","last_day","comercial_id")
+          }
+        }
+        );
+        
+        let reemplazoTable = new Tabulator("#tabla-reemplazo",{
+          height:"400px",
+          index: "comercial_id",
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          columns: columnsReemplazo
+        })
+        google.script.run.withSuccessHandler(function(data){
+          reemplazoTable.setData(data);
+        }).getSheetDataLeader("dataComerciales");
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Table summary           -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+
+const tabulatorSummaryTable = new Tabulator('#table-summary',{
+  height:"400px",
+  columnDefaults:{
+    maxWidth: 180,
+    minWidth: 150,
+  },
+  columns:[
+    {
+      title: "Comerciales",
+      field: "Comerciales",
+      frozen: true
+    },
+    {
+      title: "Visitas",
+      field: "Visitas",
+      topCalc:"sum",
+    },
+    {
+      title: "Cupos de crédito",
+      columns: [
+        {
+          title: "Radicación",
+          field: "Radicación",
+          topCalc: "sum"
+        },
+        {
+          title: "Aprobado",
+          field: "Aprobado",
+          topCalc: "sum"
+        }
+      ]
+    },
+    {
+      title: "Desembolsos",
+      columns: [
+        {
+          title: "# Clientes Proyectados",
+          field: "# Clientes Proyectados",
+          topCalc: "sum"
+        },
+        {
+          title: "Proyectado",
+          field: "Proyectado",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+        {
+          title: "# Clientes Desembolsados",
+          field: "# Clientes Desembolsados",
+          topCalc: "sum"
+        },
+        {
+          title: "Desembolsado",
+          field: "Desembolsado",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+      ]
+    },
+    {
+      title: "Captación",
+      columns: [
+        {
+          title: "# Clientes Negociación",
+          field: "# Clientes Negociación Captación",
+          topCalc: "sum"
+        },
+        {
+          title: "Negociación",
+          field: "Negociación Captación",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+        {
+          title: "# Clientes Aceptado",
+          field: "# Clientes Aceptado",
+          topCalc: "sum"
+        },
+        {
+          title: "Aceptado",
+          field: "Aceptado",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+      ]
+    },
+    {
+      title: "Sinergía",
+      columns: [
+        {
+          title: "# Clientes Negociación",
+          field: "# Clientes Negociación Sinergía",
+          topCalc: "sum"
+        },
+        {
+          title: "Negociación",
+          field: "Negociación Sinergía",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+        {
+          title: "# Clientes Recaudado",
+          field: "# Clientes Recaudado",
+          topCalc: "sum"
+        },
+        {
+          title: "Recaudado",
+          field: "Recaudado",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+      ]
+    },
+    {
+      title: "Nómina",
+      columns: [
+        {
+          title: "# Clientes Negociación",
+          field: "# Clientes Negociación Nómina",
+          topCalc: "sum"
+        },
+        {
+          title: "Negociación",
+          field: "Negociación Nómina",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+        {
+          title: "# Clientes Efectivo",
+          field: "# Clientes Efectivo Nómina",
+          topCalc: "sum"
+        },
+        {
+          title: "Efectivo",
+          field: "Efectivo Nómina",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+      ]
+    },
+    {
+      title: "Recaudo",
+      columns: [
+        {
+          title: "# Clientes Negociación",
+          field: "# Clientes Negociación Recaudo",
+          topCalc: "sum"
+        },
+        {
+          title: "Negociación",
+          field: "Negociación Recaudo",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+        {
+          title: "# Clientes Efectivo",
+          field: "# Clientes Efectivo Recaudo",
+          topCalc: "sum"
+        },
+        {
+          title: "Efectivo",
+          field: "Efectivo Recaudo",
+          hozAlign:"right",
+          formatter:"money",
+          formatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false,
+          },
+          topCalc:"sum",
+          topCalcFormatter: "money",
+          topCalcFormatterParams: {
+            decimal:",",
+            thousand:".",
+            symbol: "$",
+            symbolAfter: false
+          },
+        },
+      ]
+    },
+  ]
+});
+
+let totalLider = null;
+google.script.run.withSuccessHandler(function(map){
+  const summTable = [];
+  const frontMap = JSON.parse(map);
+  totalLider = frontMap;
+  for(const comercial in frontMap){
+    const resume = {}
+    resume["Comerciales"] = comercial;
+    
+    const currVisitas = frontMap[comercial].visitas;
+    if(currVisitas){
+      for(let i = 0; i < currVisitas.length ; i++){
+        visitas.totalVisitas += 1;
+      }
+    }
+    resume["Visitas"] = visitas.totalVisitas;
+
+    const currColocacion = frontMap[comercial].colocacion;
+
+    if(currColocacion){
+      for(let i = 0; i < currColocacion.length; i++){
+        const row = currColocacion[i];
+        if(row[2] === 'Radicación') cupos['Radicación'] += 1;
+        else if(row[2] === 'Aprobado') cupos['Aprobado'] += 1;
+      }
+    }
+    resume["Radicación"] = cupos['Radicación'];;
+    resume["Aprobado"] = cupos['Aprobado'];
+
+    const currDesembolsos = frontMap[comercial].desembolsos;
+
+    if(currDesembolsos){
+      for(let i = 0; i < currDesembolsos.length ; i++){
+        const row = currDesembolsos[i];
+        if(row[1] === 'Desembolsado'){
+          desembolsos.qDesembolsado += 1;
+          desembolsos.desembolsado += row[2] % 1e6 === row[2] ? row[2]*1e6 : row[2];
+        } else if(row[1] === 'Proyectado'){
+          desembolsos.qProyectado += 1;
+          desembolsos.proyectado += row[2] % 1e6 === row[2] ? row[2]*1e6 : row[2];
+        }
+      }
+    }
+    resume["# Clientes Proyectados"] = desembolsos.qProyectado;
+    resume["Proyectado"] = desembolsos.proyectado;
+    resume["# Clientes Desembolsados"] = desembolsos.qDesembolsado;
+    resume["Desembolsado"] = desembolsos.desembolsado;
+
+    const currCaptacion = frontMap[comercial].captacion;
+
+    if(currCaptacion) {
+      for(let i = 0; i < currCaptacion.length; i++){
+        const row = currCaptacion[i];
+        if(row[2] === 'Negociación' && row[4] !== ''){
+          captacion.qNegociacion += 1;
+          captacion.negociacion += row[4] % 1e6 === row[4] ? row[4]*1e6 : row[4];
+        } else if(row[2] === 'Aceptado' && row[5] !== '') {
+          captacion.qAceptado += 1;
+          captacion.aceptado += row[5] % 1e6 === row[5] ? row[5]*1e6 : row[5];
+        }
+      }
+    }
+    resume["# Clientes Negociación Captación"] = captacion.qNegociacion;
+    resume["Negociación Captación"] = captacion.negociacion;
+    resume["# Clientes Aceptado"] = captacion.qAceptado;
+    resume["Aceptado"] = captacion.aceptado;
+
+    const currSinergia = frontMap[comercial].sinergia;
+
+    if(currSinergia){
+      for(let i = 0; i < currSinergia.length; i++){
+        const row = currSinergia[i];
+        let value_neg = 0;
+        let value_acep = 0;
+
+        if(row[4] % 1e6 === row[4] && row[4] % 1e5 === row[4]) value_neg = row[4]*1e6;
+        else value_neg = row[4];
+
+        if(row[5] % 1e6 === row[5] && row[5] % 1e5 === row[5]) value_acep = row[5]*1e6;
+        else value_acep = row[5];
+
+        if(row[2] === 'Negociación' && row[4] !== ''){
+          sinergia.qNegociacion += 1;
+          sinergia.negociacion += value_neg;
+        } else if(row[2] === 'Recaudado' && row[5] !== '') {
+          sinergia.qRecaudado += 1;
+          sinergia.recaudado += value_acep;
+        }
+      }
+    }
+    
+    resume["# Clientes Negociación Sinergía"] = sinergia.qNegociacion;
+    resume["Negociación Sinergía"] = sinergia.negociacion;
+    resume["# Clientes Recaudado"] = sinergia.qRecaudado;
+    resume["Recaudado"] = sinergia.recaudado;
+
+    const currTransaccional = frontMap[comercial].transaccional;
+
+    if(currTransaccional){
+      for(let i = 0; i < currTransaccional.length; i++){
+        const row = currTransaccional[i];
+        if(row[3] === 'Nomina'){
+          if(row[2] === 'Negociación' && row[4] !== ''){
+            nomina.qNegociacion += 1;
+            nomina.negociacion += row[4] % 1e6 === row[4] ? row[4]*1e6 : row[4];
+          } else if(row[2] === 'Efectivo' && row[5] !== ''){
+            nomina.qEfectivo += 1;
+            nomina.efectivo += row[5] % 1e6 === row[5] ? row[5]*1e6 : row[5];
+          }
+        } else {
+          if(row[2] === 'Negociación' && row[4] !== ''){
+            recaudo.qNegociacion += 1;
+            recaudo.negociacion += row[4] % 1e6 === row[4] ? row[4]*1e6 : row[4];
+          } else if(row[2] === 'Efectivo' && row[5] !== ''){
+            recaudo.qEfectivo += 1;
+            recaudo.efectivo += row[5] % 1e6 === row[5] ? row[5]*1e6 : row[5];
+          }
+        }
+      }
+    }
+    resume["# Clientes Negociación Nómina"] = nomina.qNegociacion;
+    resume["Negociación Nómina"] = nomina.negociacion;
+    resume["# Clientes Efectivo Nómina"] = nomina.qEfectivo;
+    resume["Efectivo Nómina"] = nomina.efectivo;
+    
+    resume["# Clientes Negociación Recaudo"] = recaudo.qNegociacion;
+    resume["Negociación Recaudo"] = recaudo.negociacion;
+    resume["# Clientes Efectivo Recaudo"] = recaudo.qEfectivo;
+    resume["Efectivo Recaudo"] = recaudo.efectivo;
+
+    summTable.push(resume);
+
+    for(const key in visitas){
+      visitas[key] = 0
+    }
+    for(const key in cupos){
+      cupos[key] = 0;
+    }
+    for(const key in desembolsos){
+      desembolsos[key] = 0;
+    }
+    for(const key in captacion){
+      captacion[key] = 0;
+    }
+    for(const key in sinergia){
+      sinergia[key] = 0;
+    }
+    for(const key in recaudo){
+      recaudo[key] = 0;
+    }
+    for(const key in nomina){
+      nomina[key] = 0;
+    }
+  }
+
+  tabulatorSummaryTable.setData(JSON.stringify(summTable));
+
+  const loader = document.getElementById("loader-up");
+  loader.style.display = "none";
+}).summaryByBoss()
+
+//---------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------             Filter table summary           -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+
+function summaryBossListener(array,f){
+  const dateInit = f.dateInit ? new Date(f.dateInit) : null;
+  const dateEnd = f.dateEnd ? new Date(f.dateEnd + "T23:59:59"): null;
+  const summTable = [];
+
+  for(const comercial in array){
+    const resume = {};
+    resume["Comerciales"] = comercial;
+    
+    const currVisitas = array[comercial].visitas;
+    if(currVisitas){
+      for(let i = 0; i < currVisitas.length ; i++){
+        const row = currVisitas[i];
+        const row_date = new Date(row[3])
+        if((dateInit && dateInit > row_date) || (dateEnd && dateEnd < row_date)) continue;
+        visitas.totalVisitas += 1;
+      }
+    }
+    resume["Visitas"] = visitas.totalVisitas;
+
+    const currColocacion = array[comercial].colocacion;
+
+    if(currColocacion){
+      for(let i = 0; i < currColocacion.length; i++){
+        const row = currColocacion[i];
+        const row_date = new Date(row[1])
+        if((dateInit && dateInit > row_date) || (dateEnd && dateEnd < row_date)) continue;
+        if(row[2] === 'Radicación') cupos['Radicación'] += 1;
+        else if(row[2] === 'Aprobado') cupos['Aprobado'] += 1;
+      }
+    }
+    resume["Aprobado"] = cupos['Aprobado'];
+    resume["Radicación"] = cupos['Radicación'];
+
+    const currDesembolsos = array[comercial].desembolsos;
+
+    if(currDesembolsos){
+      for(let i = 0; i < currDesembolsos.length ; i++){
+        const row = currDesembolsos[i];
+        const row_date = new Date(row[3])
+        if((dateInit && dateInit > row_date) || (dateEnd && dateEnd < row_date)) continue;
+        if(row[1] === 'Desembolsado'){
+          desembolsos.qDesembolsado += 1;
+          desembolsos.desembolsado += row[2] % 1e6 === row[2] ? row[2]*1e6 : row[2];
+        } else if(row[1] === 'Proyectado'){
+          desembolsos.qProyectado += 1;
+          desembolsos.proyectado += row[2] % 1e6 === row[2] ? row[2]*1e6 : row[2];
+        }
+      }
+    }
+    resume["# Clientes Proyectados"] = desembolsos.qProyectado;
+    resume["Proyectado"] = desembolsos.proyectado;
+    resume["# Clientes Desembolsados"] = desembolsos.qDesembolsado;
+    resume["Desembolsado"] = desembolsos.desembolsado;
+
+    const currCaptacion = array[comercial].captacion;
+
+    if(currCaptacion){
+      for(let i = 0; i < currCaptacion.length; i++){
+        const row = currCaptacion[i];
+        const row_date = new Date(row[1])
+        if((dateInit && dateInit > row_date) || (dateEnd && dateEnd < row_date)) continue;
+        if(row[2] === 'Negociación' && row[4] !== ''){
+          captacion.qNegociacion += 1;
+          captacion.negociacion += row[4] % 1e6 === row[4] ? row[4]*1e6 : row[4];
+        } else if(row[2] === 'Aceptado' && row[5] !== '') {
+          captacion.qAceptado += 1;
+          captacion.aceptado += row[5] % 1e6 === row[5] ? row[5]*1e6 : row[5];
+        }
+      }
+    }
+    resume["# Clientes Negociación Captación"] = captacion.qNegociacion;
+    resume["Negociación Captación"] = captacion.negociacion;
+    resume["# Clientes Aceptado"] = captacion.qAceptado;
+    resume["Aceptado"] = captacion.aceptado;
+
+    const currSinergia = array[comercial].sinergia;
+
+    if(currSinergia){
+      for(let i = 0; i < currSinergia.length; i++){
+        const row = currSinergia[i];
+        const row_date = new Date(row[1])
+        if((dateInit && dateInit > row_date) || (dateEnd && dateEnd < row_date)) continue;
+        
+        if(row[4] % 1e6 === row[4] && row[4] % 1e5 === row[4]) value_neg = row[4]*1e6;
+        else value_neg = row[4];
+
+        if(row[5] % 1e6 === row[5] && row[5] % 1e5 === row[5]) value_acep = row[5]*1e6;
+        else value_acep = row[5];
+
+        if(row[2] === 'Negociación' && row[4] !== ''){
+          sinergia.qNegociacion += 1;
+          sinergia.negociacion += value_neg;
+        } else if(row[2] === 'Recaudado' && row[5] !== '') {
+          sinergia.qRecaudado += 1;
+          sinergia.recaudado += value_acep;
+        }
+      }
+    }
+    resume["# Clientes Negociación Sinergía"] = sinergia.qNegociacion;
+    resume["Negociación Sinergía"] = sinergia.negociacion;
+    resume["# Clientes Recaudado"] = sinergia.qRecaudado;
+    resume["Recaudado"] = sinergia.recaudado;
+
+    const currTransaccional = array[comercial].transaccional;
+
+    if(currTransaccional){
+      for(let i = 0; i < currTransaccional.length; i++){
+        const row = currTransaccional[i];
+        const row_date = new Date(row[1])
+        if((dateInit && dateInit > row_date) || (dateEnd && dateEnd < row_date)) continue;
+        if(row[3] === 'Nomina'){
+          if(row[2] === 'Negociación' && row[4] !== ''){
+            nomina.qNegociacion += 1;
+            nomina.negociacion += row[4] % 1e6 === row[4] ? row[4]*1e6 : row[4];
+          } else if(row[2] === 'Efectivo' && row[5] !== ''){
+            nomina.qEfectivo += 1;
+            nomina.efectivo += row[5] % 1e6 === row[5] ? row[5]*1e6 : row[5];
+          }
+        } else {
+          if(row[2] === 'Negociación' && row[4] !== ''){
+            recaudo.qNegociacion += 1;
+            recaudo.negociacion += row[4] % 1e6 === row[4] ? row[4]*1e6 : row[4];
+          } else if(row[2] === 'Efectivo' && row[5] !== ''){
+            recaudo.qEfectivo += 1;
+            recaudo.efectivo += row[5] % 1e6 === row[5] ? row[5]*1e6 : row[5];
+          }
+        }
+      }
+    }
+    resume["# Clientes Negociación Nómina"] = nomina.qNegociacion;
+    resume["Negociación Nómina"] = nomina.negociacion;
+    resume["# Clientes Efectivo Nómina"] = nomina.qEfectivo;
+    resume["Efectivo Nómina"] = nomina.efectivo;
+
+    resume["# Clientes Negociación Recaudo"] = recaudo.qNegociacion;
+    resume["Negociación Recaudo"] = recaudo.negociacion;
+    resume["# Clientes Efectivo Recaudo"] = recaudo.qEfectivo;
+    resume["Efectivo Recaudo"] = recaudo.efectivo;
+
+    summTable.push(resume);
+
+    for(const key in visitas){
+      visitas[key] = 0
+    }
+    for(const key in cupos){
+      cupos[key] = 0;
+    }
+    for(const key in desembolsos){
+      desembolsos[key] = 0;
+    }
+    for(const key in captacion){
+      captacion[key] = 0;
+    }
+    for(const key in sinergia){
+      sinergia[key] = 0;
+    }
+    for(const key in recaudo){
+      recaudo[key] = 0;
+    }
+    for(const key in nomina){
+      nomina[key] = 0;
+    }
+  }
+  tabulatorSummaryTable.setData(summTable);
+}
+
+filters = {
+  dateInit: '',
+  dateEnd: ''
+}
+
+$('#dateInit').on("change", function(){
+  filters.dateInit = $(this).val();
+  summaryBossListener(totalLider,filters);
+})
+$('#dateEnd').on("change", function(){
+  filters.dateEnd = $(this).val();
+  summaryBossListener(totalLider,filters);
+})
+$('#erase').on("click", function(){
+  $("#dateEnd,#dateInit").val('').trigger('change');
+  filters.dateInit = filters.dateEnd = '';
+});
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Botón de descarga           -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+
+    let dummyTable = new Tabulator("#dummy-table",{});
+    let forExcel = {
+      "Visitas" : tableVisitas,
+      "Cupos de crédito" : colocacionTable,
+      "Desembolsos" : tableDesembolsos,
+      "Captacion" : captacionTable,
+      "Transaccional" : transaccionalTable,
+      "Sinergía" : tableSeguros
+    }
+
+    const btnDownload = document.getElementById("btnSubmit");
+    btnDownload.addEventListener("click", () => {
+      google.script.run.withSuccessHandler(resp => {
+        dummyTable.download("xlsx","CdO" + resp[0].split('@')[0] + ".xlsx" , {sheets : forExcel})
+      }).getEmail()
+    })
+</script>

@@ -1,0 +1,940 @@
+<script>
+//------------------------------------------------------------------------------------------------------
+  //                                   Reemplazo
+  //------------------------------------------------------------------------------------------------------
+  const replacementF = document.getElementById("reemplazo");
+  google.script.run.withSuccessHandler(function(data){
+    const statusReplace = JSON.parse(data);
+    console.log(statusReplace.time);
+    if(statusReplace.time){
+      const opt = document.createElement("option");
+      opt.textContent = statusReplace.comercial[1];
+      opt.value = statusReplace.comercial[2];
+      const opt2 = document.createElement("option");
+      opt2.textContent = statusReplace.myData[1];
+      opt2.value = statusReplace.myData[2];
+      replacementF.append(opt,opt2);
+    }
+  }).replacement()
+  replacementF.addEventListener("change", (e) => {
+    const email = e.currentTarget.value;
+    const msgReemplazo = document.getElementById("msg-reemplazo");
+
+    google.script.run.withSuccessHandler(function(resp){
+      if(resp.success){
+        msgReemplazo.textContent = resp.msg;
+        setTimeout(() =>{
+          msgReemplazo.textContent = "";
+        }, 5000)
+      }
+    }).activate_replacement(email);
+  });
+  //------------------------------------ Clientes -------------------------------------------------------
+  $(document).ready(function() {
+      $('#cliente').select2({
+        placeholder: "Seleccione un cliente...",
+        allowClear: true
+      });
+    });
+  function clientsFromBack(){
+    const loader = document.getElementById("loader-up")
+    loader.style.display = "block"
+    const clientesGestion = document.getElementById("cliente");
+    google.script.run.withSuccessHandler(function(data){
+      JSON.parse(data).forEach(clerk => {
+        const opt = document.createElement('option');
+        opt.value = `${clerk[5]}`;
+        opt.textContent = `${clerk[6]} - ${clerk[7]}`;
+        clientesGestion.appendChild(opt);
+      })
+      loader.style.display = "none";
+    }).getClientesXComercial();
+    
+  }
+
+  clientsFromBack();
+  //---------------------------                       Opciones de desistencia                       ------------------------------------
+  const optionsForDesiste = [["No Viables Ley 1116","No Viables Deterioro Cifras","No Viables No Localizable","No Viables No Interesado","No Viables Moras Continuas","No Viables Unidad de Cumplimiento","No Viables No le Interesa Trabajar con el Banco","No Viables Reestructurado / Normalizado / Reperfilado","No Viables Perfil de Crédito","No Viable Por Sector","No Viables Asuntos Legales por Resolver"],["Tasa", "Comisión FNG", "Tipo de Garantía", "Garantía Vencida", "Avalúo Vencido", "Costo del Avalúo", "Monto aprobado", "Plazo muy corto", "Sin necesidad de capital", "Exámenes médicos"]];
+  function desisteOpts (){
+    const desisSelect = document.getElementById("desistencia");
+    const noGestSelect = document.getElementById("noGestionable");
+    optionsForDesiste[0].forEach(opt => {
+      const optDesiste = document.createElement("option");
+      optDesiste.value = opt;
+      optDesiste.textContent = opt;
+      noGestSelect.appendChild(optDesiste);
+    })
+    optionsForDesiste[1].forEach(opt => {
+      const optDesiste = document.createElement("option");
+      optDesiste.value = opt;
+      optDesiste.textContent = opt;
+      desisSelect.appendChild(optDesiste);
+    })
+  }
+
+  desisteOpts();
+
+//--------------------------------------------------------------------------------------------------------------------------------------
+//                                                       Show states for bank                                               
+//--------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------- Menú Visita -----------------------------------------------------------------
+    const inVis = document.getElementById("inVis");
+    const visAllFieds = document.querySelectorAll(".prodVis");
+    inVis.addEventListener("change", () => {
+      if(inVis.checked) {
+        visAllFieds.forEach(vis => {
+          vis.classList.remove("hidden");
+          if(!vis.matches('div')) vis.classList.add("campo-completado");
+        });
+      } else {
+        visAllFieds.forEach(vis => {
+          vis.classList.remove("campo-completado");
+          vis.classList.add("hidden");
+          vis.value = "";
+        });
+      }
+    });
+// --------------------------------------------------- Menú Colocación -----------------------------------------------------------------
+    const gestionColocacion = document.getElementById('gestionColocacion');
+    const colAllFields = document.querySelectorAll(".prodCol");
+    gestionColocacion.addEventListener("change", (e) => {
+      const changeCol = e.target;
+      if(changeCol.id === 'inCol'){
+        if(changeCol.checked){
+          colAllFields.forEach(col => {
+            if(!col.matches('#divNoGestionable')){
+              col.classList.remove('hidden');
+              if(!col.matches('div')){
+                col.classList.add('campo-completado');
+              }
+            }
+            if(col.matches('.formatNum')) formatterNumber(col);
+          });
+        } else {
+          colAllFields.forEach(col => {
+            col.classList.remove("campo-completado");
+            if(!col.classList.contains("hidden"))col.classList.add("hidden");
+            col.value = "";
+         });
+        }
+      } else if(changeCol.matches('#estadoCol')){
+          const noGestionableCol = document.getElementById('divNoGestionable');
+          if(changeCol.value === 'Cliente no gestionable'){  
+            noGestionableCol.classList.remove("hidden");
+          } else {
+            if(!noGestionableCol.classList.contains('hidden')) {
+              noGestionableCol.classList.add('hidden');
+              noGestionableCol.querySelector('select').value = '';
+            }
+          }
+      }
+    });
+// --------------------------------------------------- Menú Desembolsos -----------------------------------------------------------------
+    const gestionDesembolso = document.getElementById('gestionDesembolso');
+    const desemAllFieds = document.querySelectorAll(".prodDesem");
+    gestionDesembolso.addEventListener("change", (e) =>{
+      const changeDesem = e.target;
+      if(changeDesem.id === 'inDesem'){
+        if(changeDesem.checked){
+          desemAllFieds.forEach(desem => {
+          if(!desem.matches('#desistenciaDiv')){
+            desem.classList.remove('hidden');
+            if(!desem.matches('div')){
+              desem.classList.add('campo-completado');
+            }
+          }
+          if(desem.matches('.formatNum')) formatterNumber(desem);
+        });
+        } else {
+          desemAllFieds.forEach(desem => {
+            desem.classList.remove("campo-completado");
+            if(!desem.classList.contains("hidden"))desem.classList.add("hidden");
+            desem.value = "";
+         });
+        } 
+      } else if(changeDesem.matches('#estadoDesem')){
+          const desisteDesem = document.getElementById('desistenciaDiv');
+          if(changeDesem.value === 'No Concretado'){  
+            desisteDesem.classList.remove("hidden");
+          } else {
+            if(!desisteDesem.classList.contains('hidden')) {
+              desisteDesem.classList.add('hidden');
+              desisteDesem.querySelector('select').value = '';
+            }
+          }
+      }
+    })
+// --------------------------------------------------- Menu Captación -------------------------------------------------------
+    const gestionCaptacion = document.getElementById('gestionCaptacion');
+    const productListCap = gestionCaptacion.querySelector('#productoCaptacion');
+    // -------------------------------------- Delegación de eventos -------------------------------
+    gestionCaptacion.addEventListener("change", (e) =>{
+      const chkCap = e.target;
+      if(chkCap.id === "inCap"){
+        if(chkCap.checked){
+          productListCap.classList.remove('hidden');
+          productListCap.classList.add('paraGestionar');
+        } else {
+          productListCap.classList.add('hidden');
+          productListCap.classList.remove('paraGestionar');
+
+          productListCap.querySelectorAll("input[type=checkbox]").forEach( prodcutChck => {
+            prodcutChck.checked = false;
+            prodcutChck.classList.remove('campo-completado');
+            prodcutChck.closest(".prodCap").querySelectorAll('.captacionTemp').forEach( cap => cap.remove());
+          });
+        }
+      } else if (chkCap.matches('input[type=checkbox]')) {
+        const wrapper = chkCap.closest(".prodCap");
+
+        if(chkCap.checked) {
+          chkCap.className = 'campo-completado';
+          // ----------------------- Creación del div que contiene los estados ---------------------------------
+          const divEstados = document.createElement('div');
+          divEstados.className = 'captacionTemp';
+          //-------------------------- Creacion de los select para estados -----------------------------------------
+          const labelEstados = document.createElement('label');
+          labelEstados.textContent = 'Estado';
+          const selectEstados = document.createElement('select');
+          const estados = ["No Concretado","Negociación","Renegociación","Aceptado",""];
+          estados.forEach(estado => {
+            const opt = document.createElement('option');
+            opt.value = estado;
+            if(estado === ""){
+              opt.textContent = '-- Por gestionar --';
+              opt.disabled = true;
+              opt.selected = true;
+              opt.hidden = true;
+            } else {
+              opt.textContent = estado;
+            }
+            selectEstados.appendChild(opt);
+          });
+          selectEstados.className = 'campo-completado';
+          divEstados.append(labelEstados, document.createElement('br'), selectEstados);
+          //--------------------------------------------------------------------------------------------
+          // ----------------------- Creación del div que contiene razón por la que desiste ---------------------------------
+          const divRazon = document.createElement('div');
+          divRazon.className = 'captacionTemp';
+          divRazon.classList.add('hidden');
+          const labelRazon = document.createElement('label');
+          labelRazon.textContent = 'Razón por la que desiste';
+          const textareaRazon = document.createElement('textarea');
+          textareaRazon.className = 'campo-completado';
+          textareaRazon.classList.add('opcional');
+          textareaRazon.rows = 4;
+          divRazon.append(labelRazon, document.createElement('br'), textareaRazon);
+          //--------------------------------------------------------------------------------------------
+          // ----------------------- Creación del div que contiene el valor ---------------------------------
+          const divValor =  document.createElement('div');
+          divValor.className = 'captacionTemp';
+          //-------------------------- Creacion del input para valor -----------------------------------------
+          const labelValor = document.createElement('label');
+          labelValor.textContent = 'Valor';
+          const inputValor = document.createElement('input');
+          inputValor.className = 'campo-completado';
+          inputValor.type = 'text';
+          inputValor.placeholder = 'Poner el valor completo';
+          formatterNumber(inputValor);
+          divValor.append(labelValor, document.createElement('br'), inputValor);
+          //--------------------------------------------------------------------------------------------
+          // ----------------------- Creación del div que contiene las observaciones ---------------------------------
+          const divObs = document.createElement('div');
+          divObs.className = 'captacionTemp';
+          //-------------------------- Creacion del textarea para observaciones -----------------------------------------
+          const labelObs = document.createElement('label');
+          labelObs.textContent = 'Observaciones';
+          const textareaObs = document.createElement('textarea');
+          textareaObs.className = 'campo-completado';
+          textareaObs.classList.add('opcional');
+          textareaObs.rows = 4;
+          divObs.append(labelObs, document.createElement('br'),textareaObs);
+          //--------------------------------------------------------------------------------------------
+          //----------------------------------- Se añaden los divEstados y divValor al div del hijo más próximo ----------
+          wrapper.append(divEstados, divRazon, divValor, divObs);
+        } else {
+          chkCap.classList.remove('campo-completado');
+          wrapper.querySelectorAll('.captacionTemp').forEach( cap => cap.remove());
+        }
+      } else if(chkCap.matches('select')){
+
+        const razonHidden = chkCap.parentNode.nextElementSibling;
+
+        if(chkCap.value === "No Concretado"){
+
+          razonHidden.classList.remove('hidden');
+        } else {
+          razonHidden.classList.add('hidden');
+        }
+      }
+    });
+// --------------------------------------------------- Menu Transaccional ----------------------------------------------------
+    const gestionTransaccional = document.getElementById('gestionTransaccional');
+    const productListTran = gestionTransaccional.querySelector('#productoTransaccional');
+    // -------------------------------------- Delegación de eventos -------------------------------
+    gestionTransaccional.addEventListener("change", (e) =>{
+      const chkTran = e.target;
+      if(chkTran.id === "inTran"){
+        if(chkTran.checked){
+          productListTran.classList.remove('hidden');
+          productListTran.classList.add('paraGestionar');
+        } else {
+          productListTran.classList.add('hidden');
+          productListTran.classList.remove('paraGestionar');
+
+          productListTran.querySelectorAll("input[type=checkbox]").forEach( prodcutChck => {
+            prodcutChck.checked = false;
+            prodcutChck.classList.remove('campo-completado');
+            prodcutChck.closest(".prodTran").querySelectorAll('.transaccionalTemp').forEach( tran => tran.remove());
+          });
+        }
+      } else if (chkTran.matches('input[type=checkbox]')) {
+        const wrapper = chkTran.closest(".prodTran");
+
+        if(chkTran.checked) {
+          chkTran.className = 'campo-completado';
+          // ----------------------- Creación del div que contiene los estados ---------------------------------
+          const divEstados = document.createElement('div');
+          divEstados.className = 'transaccionalTemp';
+          //-------------------------- Creacion de los select para estados -----------------------------------------
+          const labelEstados = document.createElement('label');
+          labelEstados.textContent = 'Estado';
+          const selectEstados = document.createElement('select');
+          const estados = ["No Concretado","Negociación","Renegociación","Aceptado","Implementación","Efectivo",""];
+          estados.forEach(estado => {
+            const opt = document.createElement('option');
+            opt.value = estado;
+            if(estado === ""){
+              opt.textContent = '-- Por gestionar --';
+              opt.disabled = true;
+              opt.selected = true;
+              opt.hidden = true;
+            } else {
+              opt.textContent = estado;
+            }
+            selectEstados.appendChild(opt);
+          });
+          selectEstados.className = 'campo-completado';
+          divEstados.append(labelEstados, document.createElement('br'), selectEstados);
+          //--------------------------------------------------------------------------------------------
+          // ----------------------- Creación del div que contiene razón por la que desiste ---------------------------------
+          const divRazon = document.createElement('div');
+          divRazon.className = 'transaccionalTemp';
+          divRazon.classList.add('hidden');
+          const labelRazon = document.createElement('label');
+          labelRazon.textContent = 'Razón por la que desiste';
+          const textareaRazon = document.createElement('textarea');
+          textareaRazon.className = 'campo-completado';
+          textareaRazon.classList.add('opcional');
+          textareaRazon.rows = 4;
+          divRazon.append(labelRazon, document.createElement('br'), textareaRazon);
+          //--------------------------------------------------------------------------------------------
+          // ----------------------- Creación del div que contiene el valor ---------------------------------
+          const divValor =  document.createElement('div');
+          divValor.className = 'transaccionalTemp';
+          //-------------------------- Creacion del input para valor -----------------------------------------
+          const labelValor = document.createElement('label');
+
+          if(chkTran.value === "Adquirencia"){
+            labelValor.textContent = 'Valor: facturación mensual';
+          } else if(chkTran.value === "Nomina") {
+            labelValor.textContent = 'Valor: dispersión mensual';
+          } else {
+            labelValor.textContent = 'Valor mensual';
+          }
+          //labelValor.textContent = 'Valor';
+          const inputValor = document.createElement('input');
+          inputValor.className = 'campo-completado';
+          inputValor.type = 'text';
+          inputValor.placeholder = 'Poner el valor completo';
+          formatterNumber(inputValor);
+          divValor.append(labelValor, document.createElement('br'), inputValor);
+          // ----------------------- Creación del div que contiene las observaciones ---------------------------------
+          const divObs = document.createElement('div');
+          divObs.className = 'transaccionalTemp';
+          //-------------------------- Creacion del textarea para observaciones -----------------------------------------
+          const labelObs = document.createElement('label');
+          labelObs.textContent = 'Observaciones';
+          const textareaObs = document.createElement('textarea');
+          textareaObs.className = 'campo-completado';
+          textareaObs.classList.add('opcional');
+          textareaObs.rows = 4;
+          divObs.append(labelObs, document.createElement('br'),textareaObs);
+          //--------------------------------------------------------------------------------------------
+          //--------------------------------------------------------------------------------------------
+          //------------------ Se añaden los divEstados y divValor al div del hijo más próximo ----------
+          wrapper.append(divEstados,divRazon, divValor, divObs);
+        } else {
+          chkTran.classList.remove('campo-completado');
+          wrapper.querySelectorAll('.transaccionalTemp').forEach( tran => tran.remove());
+        }
+      } else if(chkTran.matches('select')){
+
+        const razonHidden = chkTran.parentNode.nextElementSibling;
+
+        if(chkTran.value === "No Concretado"){
+
+          razonHidden.classList.remove('hidden');
+        } else {
+          razonHidden.classList.add('hidden');
+        }
+      }
+    });
+// --------------------------------------------------- Menú Sinergía -----------------------------------------------------------------
+    const gestionSinergia = document.getElementById("gestionSinergia");
+    const segAllFieds = document.querySelectorAll(".prodSeg");
+    gestionSinergia.addEventListener("change", (e) => {
+      const chkSeg = e.target;
+      if(chkSeg.id === "inSeg"){
+        if(chkSeg.checked){
+          segAllFieds.forEach(seg => {
+            if(!seg.matches('div')) seg.classList.add('campo-completado');
+            if(!seg.querySelector('input') && !seg.querySelector('#razonNoInteres')){
+              seg.classList.remove('hidden');
+            }
+            if(seg.matches('.formatNum')) formatterNumber(seg);
+          }); 
+        } else {
+          segAllFieds.forEach(seg => {
+            seg.classList.remove('campo-completado');
+            seg.classList.add('hidden');
+            if(!seg.matches('div')) seg.value = '';
+          });
+        }
+      } else if (chkSeg.matches('#estadoSeg')){
+        const razon = gestionSinergia.querySelector('#RNI');
+        const mNegociado = gestionSinergia.querySelector('#MN');
+        const mAceptado = gestionSinergia.querySelector('#MA');
+        if(chkSeg.value === 'Negociación' || chkSeg.value === 'Aceptado'){
+          mNegociado.classList.remove('hidden');
+          mNegociado.querySelector('input').classList.remove('opcional');
+          razon.classList.add('hidden');
+          razon.querySelector('textarea').value = '';
+          mAceptado.classList.add('hidden');
+          mAceptado.querySelector('input').classList.add('opcional');
+        } else if(chkSeg.value === 'Recaudado'){
+          mNegociado.classList.add('hidden');
+          mNegociado.querySelector('input').classList.add('opcional');
+          mAceptado.classList.remove('hidden');
+          mAceptado.querySelector('input').classList.remove('opcional');
+          razon.classList.add('hidden');
+          razon.querySelector('textarea').value = '';
+        } else if(chkSeg.value === 'No Concretado'){
+          razon.classList.remove('hidden');
+          mNegociado.classList.add('hidden');
+          mNegociado.querySelector('input').classList.add('opcional');
+          mAceptado.classList.add('hidden');
+          mAceptado.querySelector('input').classList.add('opcional');
+        }
+      }
+    });
+// --------------------------------------------------------------------------------------------------------------------
+//                                             Button to catch register
+// --------------------------------------------------------------------------------------------------------------------
+    btnSubmit.addEventListener("click", () => {
+      const inCol = document.getElementById('inCol');
+      const inCap = document.getElementById('inCap');
+      const inTran = document.getElementById('inTran');
+      const inVis = document.getElementById('inVis');
+      const inDesem = document.getElementById('inDesem');
+      const inSeg = document.getElementById('inSeg');
+
+      const msgCliente = document.getElementById("mensaje-cliente");
+      msgCliente.style.color = 'red';
+
+      let msg = document.getElementById("mensaje");
+      msg.style.color = 'red';
+
+      let cliente =  $('#cliente').val();
+      if(!cliente){
+        msgCliente.textContent = 'Seleccione un cliente*';
+        return setTimeout(() => {
+          msgCliente.textContent = '';
+        }, 3000);
+      } 
+
+      const cliente_id = cliente;
+
+      const gestionTotal = [];
+
+      if(!inCap.checked && !inCol.checked && !inTran.checked && !inVis.checked && !inDesem.checked && !inSeg.checked){
+
+          msg.textContent = "Seleccione al menos una gestión*";
+          return setTimeout(()=> {
+            msg.textContent = "";
+          }, 3000);
+      } else if (inCol.checked || inCap.checked || inTran.checked || inVis.checked || inDesem.checked || inSeg.checked){
+        let campoCompletado = document.querySelectorAll('.campo-completado');
+        for(let i = 0; i < campoCompletado.length ; i++){
+          const campo = campoCompletado[i];
+          if(campo.value === '' && !campo.classList.contains('opcional')){
+            msg.textContent = "No ha llenado todos los campos que seleccionó*"
+            return setTimeout(()=> {
+              msg.textContent = "";
+            }, 3000);
+          } else if(campo.value !== '' || campo.classList.contains('opcional')){
+            let tipoProd = campo.parentNode.className;
+            let prod = campo.value;
+            if(campo.matches('input[type=checkbox]') && campo.checked){
+              gestionTotal.push([tipoProd, prod]);
+            } else if(campo.matches('select')){
+              gestionTotal.push([tipoProd, prod]);
+            } else if(campo.matches('input[type=text]')){
+              gestionTotal.push([tipoProd, prod]);
+            } else if(campo.matches('input[type=date]')){
+              gestionTotal.push([tipoProd, prod]);
+            } else if(campo.matches('textarea')){
+              gestionTotal.push([tipoProd, prod]);
+            }
+          };
+        }
+
+        const loaderDown = document.getElementById("loader-down");
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "Registrando...";
+        loaderDown.style.display = "block";
+
+        inVis.checked = inDesem.checked = inSeg.checked = inCol.checked = inCap.checked = inTran.checked = false;
+        
+        inCol.dispatchEvent(new Event("change", {bubbles: true}));
+        inVis.dispatchEvent(new Event("change"));
+        inDesem.dispatchEvent(new Event("change", {bubbles: true}));
+        inSeg.dispatchEvent(new Event("change", {bubbles: true}));
+        inCap.dispatchEvent(new Event("change", {bubbles: true}));
+        inTran.dispatchEvent(new Event("change", {bubbles: true}));
+
+        const colocacionResult = []
+        const captacionResult = []
+        const transaccionalResult = []
+        const visitasResult = []
+        const desembolsosResult = []
+        const segurosResult = []
+        
+        gestionTotal.forEach(row => {
+          if(row[0].toLowerCase().trim().includes("col")){
+            colocacionResult.push(["col", row[1]]);
+          } else if(row[0].toLowerCase().trim().includes("cap")){
+            captacionResult.push(["cap",row[1]]);    
+          } else if(row[0].toLowerCase().trim().includes("tran")) {
+            transaccionalResult.push(["tran",row[1]]);
+          } else if(row[0].toLowerCase().trim().includes("vis")) {
+            visitasResult.push(["vis",row[1]]);
+          } else if(row[0].toLowerCase().trim().includes("desem")) {
+            desembolsosResult.push(["desem",row[1]]);
+          } else if(row[0].toLowerCase().trim().includes("seg")) {
+            segurosResult.push(["seg",row[1]]);
+          }
+        });
+
+        console.log(colocacionResult);
+        console.log(captacionResult);
+        console.log(transaccionalResult);
+        console.log(visitasResult);
+        console.log(desembolsosResult);
+        console.log(segurosResult);
+
+        const allTables = [
+          {tableId: "colocacion", result: colocacionResult, data: "dataColocacion", table: colocacionTable},
+          {tableId: "captacion", result: captacionResult, data: "dataCaptacion", table: captacionTable},
+          {tableId: "transaccional", result: transaccionalResult, data: "dataTransaccional", table: transaccionalTable},
+          {tableId: "tabla-visitas", result: visitasResult, data: "dataVisitas", table: tableVisitas},
+          {tableId: "tabla-desembolsos", result: desembolsosResult, data: "dataDesembolsos", table: tableDesembolsos},
+          {tableId: "tabla-seguros", result: segurosResult, data: "dataSeguros", table: tableSeguros}
+          ];
+
+        allTables.forEach(row => {
+          if(row.result.length > 0){
+            const currTable = document.getElementById(row.tableId);
+            currTable.classList.add('row-updating');
+          }
+        });
+
+        google.script.run.withSuccessHandler(function(res){
+          if(res.success){
+            allTables.forEach(table => {
+              if(table.result.length > 0){
+                google.script.run.withSuccessHandler(function(data) {
+                  const mapRegisters = JSON.parse(data).map(r => ({
+                    ...r,
+                    __deleting: false
+                  }));
+                  table.table.setData(JSON.stringify(mapRegisters));
+                  document.getElementById(table.tableId).classList.remove('row-updating');
+                }).getSheetData(table.data);
+              }
+            });
+          }
+          btnSubmit.textContent = "Registrar";
+          loaderDown.style.display = "none";
+          btnSubmit.disabled = false;
+          $('#cliente').val('').trigger('change.select2');
+          msg.textContent = res.message;
+          msg.style.color = "green";
+          setTimeout(()=>{
+            msg.textContent = "";
+          }, 3000);
+        }).gestionarBolsa(cliente_id, colocacionResult, captacionResult, transaccionalResult, visitasResult, desembolsosResult, segurosResult);
+      }
+
+
+    });
+//----------------------------------- Open and close for forms ----------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
+      function toggleDisplay(trigger, targetId) {
+        const target = document.getElementById(targetId);
+        if(!target) return;
+
+        const isHidden = target.classList.toggle("hidden");
+        trigger.setAttribute("aria-expanded", String(!isHidden));
+      }
+
+      document.querySelectorAll('.dropdown').forEach(cuadro => {
+        const targetId = cuadro.dataset.target;
+        cuadro.addEventListener("click", () => toggleDisplay(cuadro, targetId));
+      })
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla visitas            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+// Llamada a GAS para traer datos
+  let columnsVisitas = theColumns("base_registros","registro_visitas", ["visita", "status_active", "fecha"], ["Presencial","Meet"] ,"visita_id");
+  columnsVisitas.splice(4,0,
+  {
+    title:"Compromiso",
+    field:"compromiso",
+    editor:"textarea",
+    editorParams:{
+      elementAttributes:{
+          maxlength:"280", //set the maximum character length of the textarea element to 10 characters
+      },
+      selectContents:true,
+      verticalNavigation:"editor", //navigate cursor around text area without leaving the cell
+      shiftEnterSubmit:true,
+    },
+    cellEdited: function(cell) {
+      forEditCell.cellEdited(cell, "base_registros", "registro_visitas", "compromiso", "visita_id");
+    }
+  },
+  {
+    title:"Acompañamiento",
+    field:"acompaniamiento",
+    editor: "list",
+    editorParams: {values : [
+      {value:"Cash", label:"Cash"},
+      {value:"UAP", label:"UAP"},
+      {value:"Lider", label:"Lider"},
+      {value:"Otro",  label:"Otro"}
+    ]},
+    cellEdited: function(cell){
+      forEditCell.cellEdited(cell, "base_registros", "registro_visitas", "acompaniamiento", "visita_id");
+    }
+  }
+  );
+  let tableVisitas = new Tabulator("#tabla-visitas", {
+    
+    height:"400px",
+    renderHorizontal: "virtual",
+    resizable: true,
+    columnDefaults:{
+      maxWidth: 150,
+      minWidth: 120,
+    },
+    index: "visita_id",
+    columns: columnsVisitas
+  });
+google.script.run.withSuccessHandler(function(data) {
+
+  const mapRegisters = JSON.parse(data).map(r => ({
+    ...r,
+    __deleting: false
+  }));
+  tableVisitas.setData(JSON.stringify(mapRegisters));
+}).getSheetData("dataVisitas"); // aquí se llama la función de GAS
+      //------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos: Colocacion
+      //-------------------------------------------------------------------------------------------------------------------
+        let columnsColocacion = theColumns("base_bolsas","colocacion", ["Estado", "status_active", "Fecha", "observaciones"], ["Aprobado","Radicación","Recolección de documentos","Cliente no gestionable", "Devolución", "Prospecto", "Negado perfilador", "Negado crédito"], "colocacion_id")
+        columnsColocacion.splice(4,0,
+        {
+          title: "Motivo no gestionable",
+          field: "noGestionable",
+          editor: "list",
+          editorParams: {values: optionsForDesiste[0].map(sta => ({value: sta, label:sta}))},
+          cellEdited: function(cell){
+            forEditCell.cellEdited(cell, "base_bolsas", "colocacion", "No gestionable", "colocacion_id");
+          },
+          headerFilter: "list",
+          headerFilterParams: {valuesLookup: true, clearable: true}
+        },
+        {
+          title:"¿Requiere estructurador?",
+          field:"estructurador",
+          editor:"list",
+          editorParams: {values: [
+            {value:"Si", label:"Si"},
+            {value:"No", label:"No"}]
+          },
+          cellEdited: function(cell){
+            forEditCell.cellEdited(cell, "base_bolsas", "colocacion", "¿Se necesita Estructurador?", "colocacion_id");
+          },
+          headerFilter:"list",
+          headerFilterPlaceholder:"Seleccione un estado...",
+          headerFilterParams:{valuesLookup:true, clearable: true}
+        },
+        {
+          title: "Cupo solicitado",
+          field: "valor_solicitado",
+          ...calcAndFormattingField("colocacion", "valor_solicitado", "colocacion_id")
+        }
+        );
+        let colocacionTable = new Tabulator("#colocacion", {
+          //data: data,
+          height:"400px",
+          renderHorizontal: "virtual",
+          resizable: true,
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          index: "colocacion_id",
+          columns: columnsColocacion
+        });
+      google.script.run.withSuccessHandler(function(data) {
+
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        colocacionTable.setData(JSON.stringify(mapRegisters));
+        colocacionTable.on("tableBuilt", function(){
+          const calcRows = table.element.querySelectorAll('.tabulator-calcs-top .tabulator-row');
+          calcRows.forEach(row => row.classList.add("calcRow"));
+        });
+      }).getSheetData("dataColocacion");
+      //----------------------------------------------------------------------------------------------------------------
+      // aquí se llama la función de GAS: Colocacion
+      //-----------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla desembolsos            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+// Llamada a GAS para traer datos
+  let columnsDesembolsos = theColumns("base_registros","registro_desembolsos",["estado","status_active", "fecha_proyeccion", "observaciones"],["Desembolsado", "Proyectado", "No Concretado"], "desembolso_id");
+  columnsDesembolsos.splice(4,0,
+  {
+    title:"Desistencia",
+    field:"desistencia",
+    editor: "list",
+    //"Tasa", "Comisión FNG", "Tipo de Garantía", "Garantía Vencida", "Avalúo Vencido", "Costo del Avalúo", "Monto aprobado", "Plazo muy corto", "Sin necesidad de capital", "Exámenes médicos"
+    editorParams: {values: optionsForDesiste[1].map(sta => ({value: sta, label:sta}))},
+    cellEdited: function(cell){
+      forEditCell.cellEdited(cell, "base_registros", "registro_desembolsos", "desistencia", "desembolso_id");
+    },
+    headerFilter: "list",
+    headerFilterPlaceholder: "Seleccione...",
+    headerFilterParams: {valuesLookup: true, clearable: true}
+  },
+  {
+    title:"Valor desembolso",
+    field:"valor_desembolso",
+    ...calcAndFormattingField("registro_desembolsos", "valor_desembolso", "desembolso_id")
+  },
+  {
+    title: "Línea",
+    field: "linea",
+    editor: "list",
+    editorParams: {
+      values: [
+        {label: "Capital de trabajo (CP/LP)", value:"Capital de trabajo (CP/LP)"},
+        {label: "UAP", value:"UAP"},
+        {label: "Moneda extranjera", value:"Moneda extranjera"},
+        {label: "Agropecuario", value:"Agropecuario"}
+      ]},
+    cellEdited: function(cell){
+      forEditCell.cellEdited(cell, "base_registros", "registro_desembolsos", "linea", "desembolso_id");
+    },
+    headerFilter: "list",
+    headerFilterPlaceholder: "Seleccione...",
+    headerFilterParams: {valuesLookup: true, clearable: true}
+  }
+  )
+
+  let tableDesembolsos = new Tabulator("#tabla-desembolsos", {
+    
+    height:"400px",
+    renderHorizontal: "virtual",
+    resizable: true,
+    columnDefaults:{
+      maxWidth: 150,
+      minWidth: 120,
+    },
+    index: "desembolso_id",
+    columns: columnsDesembolsos
+  });
+google.script.run.withSuccessHandler(function(data) {
+
+  const mapRegisters = JSON.parse(data).map(r => ({
+    ...r,
+    __deleting: false
+  }));
+  tableDesembolsos.setData(JSON.stringify(mapRegisters));
+}).getSheetData("dataDesembolsos"); // aquí se llama la función de GAS
+      //------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos: Captacion
+      //-------------------------------------------------------------------------------------------------------------------
+        let columnsCaptacion = theColumns("base_bolsas","captacion", ["Estado", "status_active",  "Fecha", "Observaciones"], ["Aceptado", "Negociación", "Renegociación","No Concretado"], "captacion_id")
+        columnsCaptacion.splice(3,0,
+        {
+          title:"Producto", 
+          field:"producto",
+          headerFilter:"list",
+          headerFilterPlaceholder:"Seleccione...",
+          headerFilterParams:{valuesLookup:true, clearable: true}
+        },
+        )
+        columnsCaptacion.splice(5,0,
+        {
+          title:"Valor Negociado",
+          field:"valor_negociado",
+          hozAlign:"right",
+          ...calcAndFormattingField("captacion", "Valor Negociado", "captacion_id"),
+        },
+        {
+          title:"Valor Efectivo",
+          field:"valor_aceptado",
+          hozAlign:"right",
+          ...calcAndFormattingField("captacion", "Valor Aceptado", "captacion_id")
+        }
+        )
+        let captacionTable = new Tabulator("#captacion", {
+          //data: data,
+          height:"400px",
+          renderHorizontal: "virtual",
+          resizable: true,
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          index: "captacion_id",
+          columns: columnsCaptacion
+        });
+      google.script.run.withSuccessHandler(function(data) {
+
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        captacionTable.setData(JSON.stringify(mapRegisters));
+      }).getSheetData("dataCaptacion");
+      captacionTable.on("tableBuilt", function(){
+        const calcRows = captacionTable.element.querySelectorAll('.tabulator-calcs-top .tabulator-row');
+        calcRows.forEach(row => row.classList.add("calcRow"));
+      });
+      //----------------------------------------------------------------------------------------------------------------
+      // aquí se llama la función de GAS: Captacacion
+      //-----------------------------------------------------------------------------------------------------------------
+      //------------------------------------------------------------------------------------------------------------------
+      // Llamada a GAS para traer datos: Transaccional
+      //-------------------------------------------------------------------------------------------------------------------
+        let columnsTransaccional = theColumns("base_bolsas","transaccional", ["Estado", "status_active",  "Fecha", "Observaciones"], ["Negociación", "Aceptado", "Implementación", "Efectivo", "Renegociación", "No Concretado"], "transaccional_id");
+        columnsTransaccional.splice(3,0,
+        {
+          title:"Producto", 
+          field:"producto",
+          headerFilter:"list",
+          headerFilterPlaceholder:"Seleccione...",
+          headerFilterParams:{valuesLookup:true, clearable: true}
+        }
+        )
+        columnsTransaccional.splice(5,0,
+        {
+          title:"Valor Negociado",
+          field:"valor_negociado",
+          hozAlign:"right",
+          ...calcAndFormattingField("transaccional", "Valor Negociado", "transaccional_id"),
+        },
+        {
+          title:"Valor Efectivo",
+          field:"valor_aceptado",
+          hozAlign:"right",
+          ...calcAndFormattingField("transaccional", "Valor Aceptado", "transaccional_id"),
+        }
+        )
+        let transaccionalTable = new Tabulator("#transaccional", {
+          //data: data,
+          height:"400px",
+          renderHorizontal: "virtual",
+          resizable: true,
+          columnDefaults:{
+            maxWidth: 150,
+            minWidth: 120,
+          },
+          index: "transaccional_id",
+          columns: columnsTransaccional
+        });
+      google.script.run.withSuccessHandler(function(data) {
+
+        const mapRegisters = JSON.parse(data).map(r => ({
+          ...r,
+          __deleting: false
+        }));
+        transaccionalTable.setData(JSON.stringify(mapRegisters));
+        transaccionalTable.on("tableBuilt", function(){
+          const calcRows = table.element.querySelectorAll('.tabulator-calcs-top .tabulator-row');
+          calcRows.forEach(row => row.classList.add("calcRow"));
+        });
+      }).getSheetData("dataTransaccional");;
+      //----------------------------------------------------------------------------------------------------------------
+      // aquí se llama la función de GAS: Transaccional
+      //-----------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------             Tabla seguros            -----------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------
+// Llamada a GAS para traer datos
+  let columnsSeguros = theColumns("base_registros","registro_seguros",["estado", "status_active",  "fecha", "observaciones"], ["Negociación", "Aceptado", "Recaudado", "No Concretado"], "seguro_id");
+  columnsSeguros.splice(3,0,
+    {
+      title:"Producto",
+      field:"seguro",
+      headerFilter: "list",
+      headerFilterPlaceholder: "Seleccione...",
+      headerFilterParams: {valuesLookup: true, clearable: true},
+    },
+  );
+  columnsSeguros.splice(5,0,
+    {
+      title:"Valor Negociado",
+      field:"valor_negociado",
+      hozAlign:"right",
+      ...calcAndFormattingField("registro_seguros", "Valor Negociado", "seguro_id"),
+    },
+    {
+      title:"Valor Efectivo",
+      field:"valor_aceptado",
+      hozAlign:"right",
+      ...calcAndFormattingField("registro_seguros", "Valor Aceptado", "seguro_id"),
+    }
+  )
+  let tableSeguros = new Tabulator("#tabla-seguros", {
+    
+    height:"400px",
+    renderHorizontal: "virtual",
+    resizable: true,
+    columnDefaults:{
+      maxWidth: 150,
+      minWidth: 120,
+    },
+    index: "seguro_id",
+    columns: columnsSeguros
+  });
+google.script.run.withSuccessHandler(function(data) {
+
+  const mapRegisters = JSON.parse(data).map(r => ({
+    ...r,
+    __deleting: false
+  }));
+  tableSeguros.setData(JSON.stringify(mapRegisters));
+  tableSeguros.on("tableBuilt", function(){
+    const calcRows = table.element.querySelectorAll('.tabulator-calcs-top .tabulator-row');
+    calcRows.forEach(row => row.classList.add("calcRow"));
+  });
+}).getSheetData("dataSeguros"); // aquí se llama la función de GAS
+</script>
